@@ -71,11 +71,13 @@ export const MobileNavSheet = () => {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="size-5" />
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger
+        render={
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <Menu className="size-5" />
+          </Button>
+        }
+      />
       <SheetContent side="left" className="w-72">
         <SheetHeader>
           <SheetTitle>Danh mục</SheetTitle>

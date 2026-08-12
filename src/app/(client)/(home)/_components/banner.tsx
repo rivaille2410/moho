@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 
+import Autoplay from "embla-carousel-autoplay";
+
 import {
   Carousel,
   CarouselItem,
@@ -17,7 +19,19 @@ const banners = [
 
 const Banner = () => {
   return (
-    <Carousel className="group relative w-full">
+    <Carousel
+      className="group relative w-full"
+      plugins={[
+        Autoplay({
+          delay: 4000,
+          stopOnInteraction: false,
+          stopOnMouseEnter: true,
+        }),
+      ]}
+      opts={{
+        loop: true,
+      }}
+    >
       <CarouselContent>
         {banners.map((banner, index) => (
           <CarouselItem key={index}>
