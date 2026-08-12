@@ -1,9 +1,13 @@
+import "./globals.css";
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Inter } from "next/font/google";
-import "./globals.css";
+
 import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+import { Toaster } from "@/components/ui/toast";
+import { QueryProvider } from "@/components/providers/query-provider";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const beVietnamPro = Be_Vietnam_Pro({
   variable: "--font-be-vietnam-pro",
@@ -19,8 +23,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={cn("h-full", "antialiased", beVietnamPro.variable, "font-sans", inter.variable)}>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+    <html
+      lang="vi"
+      className={cn(
+        "h-full",
+        "antialiased",
+        beVietnamPro.variable,
+        "font-sans",
+        inter.variable,
+      )}
+    >
+      <body className="min-h-full flex flex-col font-sans">
+        <QueryProvider>
+          <Toaster />
+          {children}
+        </QueryProvider>
+      </body>
     </html>
   );
 }

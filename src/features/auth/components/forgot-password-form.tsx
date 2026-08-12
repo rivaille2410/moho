@@ -11,6 +11,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 
 export const ForgotPasswordForm = ({
@@ -44,7 +45,8 @@ export const ForgotPasswordForm = ({
         />
 
         <Button size={"xl"} type="submit" disabled={formState.isSubmitting}>
-          Tiếp tục
+          {formState.isSubmitting && <Spinner />}
+          <p>Tiếp tục</p>
         </Button>
       </FieldGroup>
     </form>
