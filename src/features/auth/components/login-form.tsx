@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 
 import { loginSchema, type LoginValues } from "@/schemas/auth";
@@ -59,7 +60,8 @@ export const LoginForm = ({
         />
 
         <Button size={"xl"} type="submit" disabled={formState.isSubmitting}>
-          Đăng nhập
+          {formState.isSubmitting && <Spinner />}
+          <p>Đăng nhập</p>
         </Button>
       </FieldGroup>
     </form>

@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 
 import { registerSchema, type RegisterValues } from "@/schemas/auth";
@@ -17,7 +18,7 @@ export const RegisterForm = ({
 }) => {
   const { control, handleSubmit, formState } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   return (
@@ -75,26 +76,9 @@ export const RegisterForm = ({
           )}
         />
 
-        <Controller
-          name="confirmPassword"
-          control={control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="password"
-                startIcon={<Lock />}
-                autoComplete="new-password"
-                placeholder="Nhập lại mật khẩu"
-                aria-invalid={fieldState.invalid}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
         <Button size={"xl"} type="submit" disabled={formState.isSubmitting}>
-          Đăng ký
+          {formState.isSubmitting && <Spinner />}
+          <p>Đăng ký</p>
         </Button>
       </FieldGroup>
     </form>
