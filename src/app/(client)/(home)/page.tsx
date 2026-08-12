@@ -1,5 +1,11 @@
+import Banner from "./_components/banner";
+
 const HomePage = () => {
-  return <main className="wrapper w-full">HomePage</main>;
+  return (
+    <main>
+      <Banner />
+    </main>
+  );
 };
 
 export default HomePage;
