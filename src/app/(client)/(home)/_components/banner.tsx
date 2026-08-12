@@ -33,8 +33,8 @@ const Banner = () => {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="text-background bg-secondary left-4 opacity-0 group-hover:opacity-100" />
-      <CarouselNext className="text-background bg-secondary right-4 opacity-0 group-hover:opacity-100" />
+      <CarouselPrevious className="text-background bg-secondary left-4 opacity-0! group-hover:opacity-100!" />
+      <CarouselNext className="text-background bg-secondary right-4 opacity-0! group-hover:opacity-100!" />
     </Carousel>
   );
 };
