@@ -336,7 +336,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           <div className="border-b pt-3 pb-2 px-4">
             <span className="text-lg font-semibold">Mô tả sản phẩm</span>
           </div>
-          <div className="pt-8 px-4">
+          <div className="py-8 px-4">
             <div
               className="prose prose-sm max-w-none prose-img:rounded-lg prose-img:mx-auto prose-img:block"
               dangerouslySetInnerHTML={{ __html: sanitizedDescription }}

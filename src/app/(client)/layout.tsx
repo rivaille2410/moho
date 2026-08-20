@@ -1,3 +1,4 @@
+import { Footer } from "./_components/footer";
 import { Header } from "./_components/header";
 import { NavMenu } from "./_components/nav-menu";
 import { MarqueeBar } from "./_components/marquee-bar";
@@ -9,6 +10,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
       <Header />
       <NavMenu />
       {children}
+      <Footer />
     </div>
   );
 };
