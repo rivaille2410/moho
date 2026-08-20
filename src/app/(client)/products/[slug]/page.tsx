@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState, useRef, useEffect, useCallback, use } from "react";
 
+import DOMPurify from "dompurify";
 import Autoplay from "embla-carousel-autoplay";
 import { Minus, Plus, CheckCircle2 } from "lucide-react";
 
@@ -68,6 +69,11 @@ export default function ProductPage({ params }: ProductPageProps) {
     if (selectedVariant?.images.length) return selectedVariant.images;
     return product.images;
   }, [product, selectedVariant]);
+
+  const sanitizedDescription = useMemo(() => {
+    if (!product?.description) return null;
+    return DOMPurify.sanitize(product.description);
+  }, [product?.description]);
 
   const handleThumbnailClick = useCallback(
     (index: number) => {
@@ -324,6 +330,20 @@ export default function ProductPage({ params }: ProductPageProps) {
           </ul>
         </div>
       </div>
+
+      {sanitizedDescription ? (
+        <div className="rounded-lg border mt-10">
+          <div className="border-b pt-3 pb-2 px-4">
+            <span className="text-lg font-semibold">Mô tả sản phẩm</span>
+          </div>
+          <div className="pt-8 px-4">
+            <div
+              className="prose prose-sm max-w-none prose-img:rounded-lg prose-img:mx-auto prose-img:block"
+              dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {(isLoadingRelated || relatedProducts.length > 0) && (
         <ProductGrid
