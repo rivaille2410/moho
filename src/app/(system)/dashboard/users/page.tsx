@@ -5,9 +5,9 @@ import * as React from "react";
 import { type ReactTable } from "@tanstack/react-table";
 import { ShieldBanIcon, Trash2Icon } from "lucide-react";
 
-import { getColumns } from "./_components/columns";
-import { EditRoleDialog } from "./_components/edit-role-dialog";
-import { UsersTableToolbar } from "./_components/users-table-toolbar";
+import { getColumns } from "@/features/users/components/columns";
+import { EditRoleDialog } from "@/features/users/components/edit-role-dialog";
+import { UsersTableToolbar } from "@/features/users/components/users-table-toolbar";
 
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useBanUser } from "@/features/users/hooks/use-ban-user";
