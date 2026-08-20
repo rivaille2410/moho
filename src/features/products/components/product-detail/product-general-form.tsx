@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 import {
   useCategoryTree,
@@ -243,11 +243,16 @@ export function ProductGeneralForm({ product }: Props) {
 
         <Field>
           <FieldLabel>Mô tả</FieldLabel>
-          <Textarea
-            rows={4}
-            placeholder="Nhập mô tả sản phẩm"
-            {...form.register("description")}
+          <RichTextEditor
+            value={form.watch("description") ?? ""}
+            onChange={(html) =>
+              form.setValue("description", html, { shouldValidate: true })
+            }
+            placeholder="Nhập mô tả sản phẩm..."
           />
+          {form.formState.errors.description && (
+            <FieldError>{form.formState.errors.description.message}</FieldError>
+          )}
         </Field>
 
         <Field>
