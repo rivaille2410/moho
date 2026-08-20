@@ -15,6 +15,7 @@ import {
 const banners = [
   { src: "/banner/banner-1.webp", alt: "Banner 1" },
   { src: "/banner/banner-2.webp", alt: "Banner 2" },
+  { src: "/banner/banner-3.webp", alt: "Banner 3" },
 ];
 
 const Banner = () => {

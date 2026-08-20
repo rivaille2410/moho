@@ -63,7 +63,7 @@ const newsLinks = [
 
 export const NavMenu = () => {
   return (
-    <nav className="wrapper hidden w-full items-center border-b bg-background md:flex">
+    <nav className="wrapper hidden w-full items-center bg-background md:flex">
       <Menubar className="h-11 gap-3 border-none bg-transparent">
         <MenubarMenu>
           <MenubarTrigger className="gap-1 font-medium">

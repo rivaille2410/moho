@@ -4,7 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-import { UsersIcon, LayoutDashboardIcon } from "lucide-react";
+import {
+  TagsIcon,
+  UsersIcon,
+  PackageIcon,
+  LayoutDashboardIcon,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -31,6 +36,16 @@ const data = {
       title: "Quản lý người dùng",
       url: "/dashboard/users",
       icon: <UsersIcon />,
+    },
+    {
+      title: "Quản lý danh mục",
+      url: "/dashboard/categories",
+      icon: <TagsIcon />,
+    },
+    {
+      title: "Quản lý sản phẩm",
+      url: "/dashboard/products",
+      icon: <PackageIcon />,
     },
   ],
 };

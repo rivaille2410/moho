@@ -9,6 +9,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BREADCRUMB_LOADING } from "@/lib/breadcrumb-store";
 
 export interface BreadcrumbItemData {
   label: string;
@@ -25,11 +27,14 @@ export const PageBreadcrumb = ({ items }: PageBreadcrumbProps) => {
       <BreadcrumbList>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
+          const isLoading = item.label === BREADCRUMB_LOADING;
 
           return (
             <Fragment key={`${item.label}-${index}`}>
               <BreadcrumbItem>
-                {isLast || !item.href ? (
+                {isLoading ? (
+                  <Skeleton className="w-60 h-4" />
+                ) : isLast || !item.href ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink render={<Link href={item.href} />}>
