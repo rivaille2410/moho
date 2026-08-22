@@ -88,7 +88,7 @@ export function Footer() {
 
         <div className="space-y-4">
           <h3 className="font-bold tracking-wide">FANPAGE</h3>
-          <div className="rounded-lg border overflow-hidden">
+          <div className="rounded-lg border overflow-hidden bg-background">
             <div className="flex items-center gap-3 p-3">
               <Image
                 src="/avatar-moho.png"

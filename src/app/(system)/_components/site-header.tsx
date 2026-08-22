@@ -2,19 +2,21 @@
 
 import { usePathname } from "next/navigation";
 
+import { useBreadcrumbOverrides } from "@/lib/breadcrumb-store";
+
 import {
   PageBreadcrumb,
   type BreadcrumbItemData,
 } from "@/components/shared/page-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useBreadcrumbOverrides } from "@/lib/breadcrumb-store";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   users: "Quản lý người dùng",
   products: "Quản lý sản phẩm",
   categories: "Quản lý danh mục",
+  reviews: "Quản lý đánh giá",
 };
 
 function buildBreadcrumbItems(
