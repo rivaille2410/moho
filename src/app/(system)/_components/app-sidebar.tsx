@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import {
   TagsIcon,
+  StarIcon,
   UsersIcon,
   PackageIcon,
   LayoutDashboardIcon,
@@ -46,6 +47,11 @@ const data = {
       title: "Quản lý sản phẩm",
       url: "/dashboard/products",
       icon: <PackageIcon />,
+    },
+    {
+      title: "Quản lý đánh giá",
+      url: "/dashboard/reviews",
+      icon: <StarIcon />,
     },
   ],
 };

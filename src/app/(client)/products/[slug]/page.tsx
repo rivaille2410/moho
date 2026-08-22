@@ -5,7 +5,7 @@ import { useMemo, useState, useRef, useEffect, useCallback, use } from "react";
 
 import DOMPurify from "dompurify";
 import Autoplay from "embla-carousel-autoplay";
-import { Minus, Plus, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, CheckCircle2, ChevronDown } from "lucide-react";
 
 import {
   Carousel,
@@ -15,13 +15,15 @@ import {
 import { Button } from "@/components/ui/button";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { cn } from "@/lib/utils";
 import type { ProductVariant } from "@/types/product";
 import ProductGrid from "../../(home)/_components/product-grid";
 import { usePublicProduct } from "@/features/products/hooks/use-public-product";
-import { useRelatedProducts } from "@/features/products/hooks/use-related-products";
 import ProductDetailSkeleton from "@/features/products/components/product-detail/product-detail-skeleton";
+import ProductReviewsContainer from "@/features/products/components/product-detail/product-reviews-container";
+import { useRelatedProducts } from "@/features/products/hooks/use-related-products";
 import ProductNotFound from "@/features/products/components/product-detail/product-not-found";
 
 const formatVND = (value: number) =>
@@ -51,6 +53,12 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  const DESCRIPTION_COLLAPSED_HEIGHT = 480;
+
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isDescOverflowing, setIsDescOverflowing] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
 
   const autoplayPlugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true }),
@@ -82,6 +90,13 @@ export default function ProductPage({ params }: ProductPageProps) {
     },
     [carouselApi],
   );
+
+  useEffect(() => {
+    if (!descRef.current) return;
+    setIsDescOverflowing(
+      descRef.current.scrollHeight > DESCRIPTION_COLLAPSED_HEIGHT,
+    );
+  }, [sanitizedDescription]);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -331,19 +346,80 @@ export default function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {sanitizedDescription ? (
-        <div className="rounded-lg border mt-10">
-          <div className="border-b pt-3 pb-2 px-4">
-            <span className="text-lg font-semibold">Mô tả sản phẩm</span>
-          </div>
-          <div className="py-8 px-4">
-            <div
-              className="prose prose-sm max-w-none prose-img:rounded-lg prose-img:mx-auto prose-img:block"
-              dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-            />
-          </div>
-        </div>
-      ) : null}
+      <div className="rounded-lg border mt-10">
+        <Tabs defaultValue="description">
+          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-4 py-0">
+            <TabsTrigger
+              value="description"
+              className="rounded-none shadow-none! px-0 py-3 text-base font-semibold text-muted-foreground data-[state=active]:bg-transparent"
+            >
+              Mô tả sản phẩm
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="rounded-none shadow-none! px-0 py-3 text-base font-semibold text-muted-foreground data-[state=active]:bg-transparent"
+            >
+              Đánh giá sản phẩm
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="description" className="px-4 py-8">
+            {sanitizedDescription ? (
+              <div className="relative">
+                <div
+                  ref={descRef}
+                  className={cn(
+                    "prose prose-sm max-w-none overflow-hidden prose-img:mx-auto prose-img:block prose-img:rounded-lg transition-[max-height] duration-500 ease-in-out",
+                    !isDescExpanded && "max-h-120",
+                  )}
+                  dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                />
+
+                {!isDescExpanded && isDescOverflowing && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
+                )}
+
+                {isDescOverflowing && (
+                  <div
+                    className={cn(
+                      "relative flex justify-center",
+                      !isDescExpanded && "-mt-6",
+                      isDescExpanded && "sticky bottom-4 z-10 mt-4",
+                    )}
+                  >
+                    <Button
+                      size={"lg"}
+                      variant="outline"
+                      onClick={() => setIsDescExpanded((prev) => !prev)}
+                      className={cn(
+                        "gap-1.5",
+                        isDescExpanded &&
+                          "shadow-lg backdrop-blur-sm bg-background/90",
+                      )}
+                    >
+                      {isDescExpanded ? "Thu gọn" : "Xem thêm"}
+                      <ChevronDown
+                        className={cn(
+                          "size-4 transition-transform duration-300",
+                          isDescExpanded && "rotate-180",
+                        )}
+                      />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Chưa có mô tả cho sản phẩm này.
+              </p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="reviews" className="px-4 py-8">
+            <ProductReviewsContainer slug={product.slug} />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {(isLoadingRelated || relatedProducts.length > 0) && (
         <ProductGrid
