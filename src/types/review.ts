@@ -2,6 +2,7 @@ export interface ReviewAuthor {
   userId: string | null;
   name: string;
   avatarUrl: string | null;
+  email: string | null;
   isRegisteredUser: boolean;
   memberSinceYears: number;
   reviewCount: number;
@@ -11,11 +12,13 @@ export interface ReviewAuthor {
 export interface ReviewVariantInfo {
   label: string;
   value: string;
+  colorHex: string | null;
 }
 
 export interface ReviewProduct {
   name: string;
   slug: string;
+  thumbnailUrl: string | null;
 }
 
 export interface Review {
@@ -30,6 +33,7 @@ export interface Review {
   variantInfo?: ReviewVariantInfo[];
   usedForLabel: string | null;
   helpfulCount: number;
+  isHelpfulByCurrentUser: boolean;
   commentCount: number;
   createdAt: string;
   updatedAt: string;

@@ -23,31 +23,33 @@ interface PageBreadcrumbProps {
 
 export const PageBreadcrumb = ({ items }: PageBreadcrumbProps) => {
   return (
-    <Breadcrumb className="py-2">
-      <BreadcrumbList>
-        {items.map((item, index) => {
-          const isLast = index === items.length - 1;
-          const isLoading = item.label === BREADCRUMB_LOADING;
+    <div className="bg-muted/50 rounded-md py-2.5">
+      <Breadcrumb className="wrapper">
+        <BreadcrumbList>
+          {items.map((item, index) => {
+            const isLast = index === items.length - 1;
+            const isLoading = item.label === BREADCRUMB_LOADING;
 
-          return (
-            <Fragment key={`${item.label}-${index}`}>
-              <BreadcrumbItem>
-                {isLoading ? (
-                  <Skeleton className="w-60 h-4" />
-                ) : isLast || !item.href ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink render={<Link href={item.href} />}>
-                    {item.label}
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
+            return (
+              <Fragment key={`${item.label}-${index}`}>
+                <BreadcrumbItem>
+                  {isLoading ? (
+                    <Skeleton className="w-60 h-4" />
+                  ) : isLast || !item.href ? (
+                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink render={<Link href={item.href} />}>
+                      {item.label}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
 
-              {!isLast && <BreadcrumbSeparator />}
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
+                {!isLast && <BreadcrumbSeparator />}
+              </Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
   );
 };

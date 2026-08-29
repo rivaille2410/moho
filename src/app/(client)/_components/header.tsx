@@ -9,14 +9,17 @@ import {
   LogOut,
   UserRound,
   ChevronDown,
-  ShoppingBag,
+  ReceiptText,
   LayoutDashboard,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { authRequest } from "@/lib/auth-request";
+
+import { CartPopover } from "./cart-popover";
 import { SearchInput } from "./search-input";
 import { MobileNavSheet } from "./mobile-nav-sheet";
-import { authRequest } from "@/lib/auth-request";
+
 import { AuthModal } from "@/features/auth/components/auth-modal";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 
@@ -60,15 +63,7 @@ export const Header = () => {
         <SearchInput />
 
         <div className="flex items-center">
-          <Button size="lg" variant="ghost" className="relative">
-            <div className="relative">
-              <ShoppingBag className="size-5" />
-              <span className="absolute -right-2 -top-2 size-4.5 flex items-center justify-center text-[12px] font-medium text-background bg-secondary rounded-full">
-                3
-              </span>
-            </div>
-            <p>Giỏ hàng</p>
-          </Button>
+          {!(user?.role === "ADMIN") && <CartPopover />}
 
           {isLoading ? (
             <Spinner className="size-5 text-secondary" />
@@ -108,6 +103,12 @@ export const Header = () => {
                     <User className="size-4" />
                     Hồ sơ
                   </DropdownMenuItem>
+                  {user.role !== "ADMIN" && (
+                    <DropdownMenuItem onClick={() => router.push("/orders")}>
+                      <ReceiptText className="size-4" />
+                      Đơn hàng của tôi
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} variant="destructive">
