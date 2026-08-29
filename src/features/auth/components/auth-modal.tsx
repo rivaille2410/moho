@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { Mail, KeyRound } from "lucide-react";
@@ -80,9 +80,12 @@ export const AUTH_VIEW_CONTENT: Record<
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const RESET_TOKEN_QUERY_KEY = "resetToken";
+const AUTH_REQUIRED_QUERY_KEY = "auth";
+const REDIRECT_QUERY_KEY = "redirect";
 
 export const AuthModal = ({ children }: AuthModalProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
@@ -97,6 +100,7 @@ export const AuthModal = ({ children }: AuthModalProps) => {
   const [forgotCooldown, setForgotCooldown] = useState(0);
 
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
   const { title, description } = AUTH_VIEW_CONTENT[view];
 
@@ -133,17 +137,27 @@ export const AuthModal = ({ children }: AuthModalProps) => {
   }, [forgotCooldown]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get(RESET_TOKEN_QUERY_KEY);
+    const token = searchParams.get(RESET_TOKEN_QUERY_KEY);
 
-    if (!token) return;
+    if (token) {
+      setResetToken(token);
+      setView("reset-password");
+      setOpen(true);
+      router.replace(window.location.pathname, { scroll: false });
+      return;
+    }
 
-    setResetToken(token);
-    setView("reset-password");
-    setOpen(true);
+    const authRequired = searchParams.get(AUTH_REQUIRED_QUERY_KEY);
 
-    router.replace(window.location.pathname, { scroll: false });
-  }, []);
+    if (authRequired === "required") {
+      const redirect = searchParams.get(REDIRECT_QUERY_KEY);
+      if (redirect) setRedirectTo(redirect);
+
+      setView("login");
+      setOpen(true);
+      router.replace(window.location.pathname, { scroll: false });
+    }
+  }, [searchParams]);
 
   const handleLogin = async (values: LoginValues) => {
     const result = await authRequest({
@@ -163,7 +177,10 @@ export const AuthModal = ({ children }: AuthModalProps) => {
 
     const me = await fetchMe();
 
-    if (me?.role === "ADMIN") {
+    if (redirectTo) {
+      router.push(redirectTo);
+      setRedirectTo(null);
+    } else if (me?.role === "ADMIN") {
       router.push("/dashboard");
     } else {
       router.refresh();
@@ -223,7 +240,13 @@ export const AuthModal = ({ children }: AuthModalProps) => {
 
   const handleGoogleLogin = () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-    window.location.href = `${apiUrl}/auth/google`;
+    const loginUrl = new URL(`${apiUrl}/auth/google`);
+
+    if (redirectTo) {
+      loginUrl.searchParams.set(REDIRECT_QUERY_KEY, redirectTo);
+    }
+
+    window.location.href = loginUrl.toString();
   };
 
   const handleResendVerification = async () => {
@@ -277,6 +300,7 @@ export const AuthModal = ({ children }: AuthModalProps) => {
           setForgotEmail(null);
           setForgotCooldown(0);
           setResetToken(null);
+          setRedirectTo(null);
         }
       }}
     >

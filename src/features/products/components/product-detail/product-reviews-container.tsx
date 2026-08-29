@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Review } from "@/types/review";
 import { formatRelativeTimeVi } from "@/lib/format-relative-time";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import ProductReviews, { type ProductReview } from "./product-reviews";
 
 import { usePublicReviews } from "@/features/reviews/hooks/use-public-reviews";
@@ -38,6 +39,7 @@ function mapReview(r: Review): ProductReview {
     commentCount: r.commentCount,
     content: r.content,
     images: r.images,
+    isHelpfulByCurrentUser: r.isHelpfulByCurrentUser,
   };
 }
 
@@ -94,11 +96,67 @@ export default function ProductReviewsContainer({
   if (isLoading || isSummaryLoading) {
     return (
       <div className={className}>
-        <div className="h-6 w-40 animate-pulse rounded bg-muted" />
-        <div className="mt-4 h-24 animate-pulse rounded bg-muted" />
-        <div className="mt-4 space-y-3">
+        <Skeleton className="h-6 w-48" />
+
+        <div className="mt-4 sm:max-w-md">
+          <Skeleton className="h-4 w-20" />
+          <div className="mt-3 flex items-center gap-4">
+            <div className="shrink-0 space-y-2">
+              <Skeleton className="h-9 w-12" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <div className="h-16 w-px shrink-0 bg-border" />
+            <div className="flex-1 space-y-1.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-3 w-8 shrink-0" />
+                  <Skeleton className="h-1.5 flex-1 rounded-full" />
+                  <Skeleton className="h-3 w-4 shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Skeleton className="mb-2 h-4 w-16" />
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-24 rounded-full" />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 h-px w-full bg-border" />
+
+        <div className="divide-y divide-border">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded bg-muted" />
+            <div key={i} className="flex gap-4 py-5 first:pt-0">
+              <Skeleton className="size-10 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-40" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-24" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -115,6 +173,7 @@ export default function ProductReviewsContainer({
 
   return (
     <ProductReviews
+      slug={slug}
       reviews={reviews}
       summary={summary}
       className={className}

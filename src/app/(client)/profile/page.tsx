@@ -42,12 +42,12 @@ const ProfilePage = () => {
   const [section, setSection] = useState<ProfileSection>("info");
 
   return (
-    <section className="wrapper w-full">
+    <section className="w-full space-y-3 pb-12">
       <PageBreadcrumb
         items={[{ label: "Trang chủ", href: "/" }, { label: "Hồ sơ của bạn" }]}
       />
 
-      <div className="space-y-4">
+      <div className="wrapper space-y-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">Hồ sơ của bạn</h1>
           <p className="text-sm text-muted-foreground">

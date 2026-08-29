@@ -9,6 +9,7 @@ import {
   StarIcon,
   UsersIcon,
   PackageIcon,
+  ReceiptIcon,
   LayoutDashboardIcon,
 } from "lucide-react";
 
@@ -29,29 +30,49 @@ import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 const data = {
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <LayoutDashboardIcon />,
+      label: "Tổng quan",
+      items: [
+        {
+          title: "Dashboard",
+          url: "/dashboard",
+          icon: <LayoutDashboardIcon />,
+        },
+      ],
     },
     {
-      title: "Quản lý người dùng",
-      url: "/dashboard/users",
-      icon: <UsersIcon />,
+      label: "Nội dung",
+      items: [
+        {
+          title: "Quản lý danh mục",
+          url: "/dashboard/categories",
+          icon: <TagsIcon />,
+        },
+        {
+          title: "Quản lý sản phẩm",
+          url: "/dashboard/products",
+          icon: <PackageIcon />,
+        },
+        {
+          title: "Quản lý đánh giá",
+          url: "/dashboard/reviews",
+          icon: <StarIcon />,
+        },
+      ],
     },
     {
-      title: "Quản lý danh mục",
-      url: "/dashboard/categories",
-      icon: <TagsIcon />,
-    },
-    {
-      title: "Quản lý sản phẩm",
-      url: "/dashboard/products",
-      icon: <PackageIcon />,
-    },
-    {
-      title: "Quản lý đánh giá",
-      url: "/dashboard/reviews",
-      icon: <StarIcon />,
+      label: "Bán hàng",
+      items: [
+        {
+          title: "Quản lý đơn hàng",
+          url: "/dashboard/orders",
+          icon: <ReceiptIcon />,
+        },
+        {
+          title: "Quản lý người dùng",
+          url: "/dashboard/users",
+          icon: <UsersIcon />,
+        },
+      ],
     },
   ],
 };
@@ -75,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} pathname={pathname} />
+        <NavMain groups={data.navMain} pathname={pathname} />
       </SidebarContent>
       <SidebarFooter>
         {user && (

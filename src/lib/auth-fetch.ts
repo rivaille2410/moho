@@ -71,3 +71,45 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
   const res = await callBackend(newTokens.accessToken);
   return { res, unauthorized: false as const };
 }
+
+export async function fetchOptionalAuth(path: string, init: RequestInit = {}) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
+
+  const callBackend = (token?: string) =>
+    fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: {
+        ...(init.headers ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+  if (!accessToken && !refreshToken) {
+    return callBackend();
+  }
+
+  if (accessToken) {
+    const res = await callBackend(accessToken);
+    if (res.status !== 401) {
+      return res;
+    }
+  }
+
+  if (!refreshToken) {
+    return callBackend();
+  }
+
+  const newTokens = await refreshTokens(refreshToken);
+  if (!newTokens) {
+    cookieStore.delete("accessToken");
+    cookieStore.delete("refreshToken");
+    return callBackend();
+  }
+
+  cookieStore.set("accessToken", newTokens.accessToken, COOKIE_OPTS);
+  cookieStore.set("refreshToken", newTokens.refreshToken, COOKIE_OPTS);
+
+  return callBackend(newTokens.accessToken);
+}

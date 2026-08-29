@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   Eye,
@@ -78,24 +79,33 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
       cell: ({ row }) => {
         const { author, verifiedPurchase } = row.original;
         return (
-          <div className="flex flex-col gap-1">
-            <span className="font-medium line-clamp-1">{author.name}</span>
-            <div className="flex items-center gap-1.5">
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs font-normal",
-                  author.isRegisteredUser
-                    ? "border-secondary/20 bg-secondary/10 text-secondary"
-                    : "border-muted-foreground/20 bg-muted text-muted-foreground",
-                )}
-              >
-                {author.isRegisteredUser ? "Thành viên" : "Khách"}
-              </Badge>
+          <div className="flex items-center gap-2">
+            <div className="relative size-9 shrink-0 overflow-hidden rounded-full border bg-muted">
+              {author.avatarUrl ? (
+                <Image
+                  fill
+                  src={author.avatarUrl}
+                  sizes="36px"
+                  className="object-cover"
+                  alt={author.name}
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-xs font-medium text-muted-foreground">
+                  {author.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium line-clamp-1">{author.name}</span>
+              {author.email && (
+                <span className="line-clamp-1 text-xs text-muted-foreground">
+                  {author.email}
+                </span>
+              )}
               {verifiedPurchase && (
                 <Badge
                   variant="outline"
-                  className="gap-1 border-emerald-500/20 bg-emerald-500/10 text-xs font-normal text-emerald-600"
+                  className="w-fit gap-1 border-emerald-500/20 bg-emerald-500/10 text-xs font-normal text-emerald-600"
                 >
                   <BadgeCheck className="size-3" />
                   Đã mua hàng
@@ -135,10 +145,25 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
           <Link
             href={`/products/${product.slug}`}
             target="_blank"
-            className="line-clamp-1 max-w-40 text-sm hover:text-secondary hover:underline"
-            title={product.name}
+            className="flex items-center gap-2 hover:text-secondary transition"
           >
-            {product.name}
+            <div className="relative size-9 shrink-0 overflow-hidden rounded-md border bg-muted">
+              {product.thumbnailUrl && (
+                <Image
+                  fill
+                  src={product.thumbnailUrl}
+                  sizes="36px"
+                  className="object-cover"
+                  alt={product.name}
+                />
+              )}
+            </div>
+            <span
+              className="line-clamp-2 max-w-40 text-sm"
+              title={product.name}
+            >
+              {product.name}
+            </span>
           </Link>
         );
       },
