@@ -1,4 +1,6 @@
-export interface ReviewAuthor {
+import { ReviewCommentAuthor } from "./review-comment";
+
+export type ReviewAuthor = {
   userId: string | null;
   name: string;
   avatarUrl: string | null;
@@ -7,21 +9,28 @@ export interface ReviewAuthor {
   memberSinceYears: number;
   reviewCount: number;
   thanksCount: number;
-}
+};
 
-export interface ReviewVariantInfo {
+export type ReviewVariantInfo = {
   label: string;
   value: string;
   colorHex: string | null;
-}
+};
 
-export interface ReviewProduct {
+export type ReviewProduct = {
   name: string;
   slug: string;
   thumbnailUrl: string | null;
-}
+};
 
-export interface Review {
+export type ReviewCommentPreview = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: ReviewCommentAuthor;
+};
+
+export type Review = {
   id: string;
   productId: string;
   product: ReviewProduct;
@@ -34,33 +43,34 @@ export interface Review {
   usedForLabel: string | null;
   helpfulCount: number;
   isHelpfulByCurrentUser: boolean;
+  comments: ReviewCommentPreview[];
   commentCount: number;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface ReviewRatingSummary {
+export type ReviewRatingSummary = {
   average: number;
   total: number;
   breakdown: Record<"1" | "2" | "3" | "4" | "5", number>;
-}
+};
 
-export interface PaginationMeta {
+export type PaginationMeta = {
   page: number;
   limit: number;
   totalItems: number;
   totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
-}
+};
 
-export interface CreateCustomerReviewInput {
+export type CreateCustomerReviewInput = {
   rating: number;
   content: string;
   variantId?: string;
-}
+};
 
-export interface CreateReviewInput {
+export type CreateReviewInput = {
   productId: string;
   userId?: string;
   authorName: string;
@@ -69,13 +79,13 @@ export interface CreateReviewInput {
   variantId?: string;
   usedForLabel?: string;
   verifiedPurchase?: boolean;
-}
+};
 
-export interface UpdateReviewInput {
+export type UpdateReviewInput = {
   userId?: string;
   authorName?: string;
   rating?: number;
   content?: string;
   usedForLabel?: string;
   verifiedPurchase?: boolean;
-}
+};

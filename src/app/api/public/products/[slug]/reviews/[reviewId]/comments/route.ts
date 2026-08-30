@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchWithAuth } from "@/lib/auth-fetch";
+import { fetchOptionalAuth, fetchWithAuth } from "@/lib/auth-fetch";
 
 interface RouteParams {
   params: Promise<{ slug: string; reviewId: string }>;
@@ -10,18 +10,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const { slug, reviewId } = await params;
   const search = req.nextUrl.searchParams.toString();
 
-  const { res } = await fetchWithAuth(
+  const res = await fetchOptionalAuth(
     `/products/${slug}/reviews/${reviewId}/comments${
       search ? `?${search}` : ""
     }`,
   );
-
-  if (!res) {
-    return NextResponse.json(
-      { message: "Không thể tải bình luận" },
-      { status: 500 },
-    );
-  }
 
   const data = await res.json().catch(() => null);
   return NextResponse.json(data, { status: res.status });
