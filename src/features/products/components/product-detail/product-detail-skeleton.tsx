@@ -88,6 +88,26 @@ export default function ProductDetailSkeleton() {
           </ul>
         </div>
       </div>
+
+      <div className="mt-10 rounded-lg border">
+        <div className="flex w-full items-center gap-6 border-b px-4">
+          <div className="py-3">
+            <Skeleton className="h-4.5 w-28" />
+          </div>
+          <div className="py-3">
+            <Skeleton className="h-4.5 w-32" />
+          </div>
+        </div>
+
+        <div className="space-y-2.5 px-4 py-8">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="mt-4 aspect-video w-full rounded-lg" />
+        </div>
+      </div>
     </div>
   );
 }

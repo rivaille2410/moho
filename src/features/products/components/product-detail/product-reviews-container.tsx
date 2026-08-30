@@ -40,6 +40,7 @@ function mapReview(r: Review): ProductReview {
     content: r.content,
     images: r.images,
     isHelpfulByCurrentUser: r.isHelpfulByCurrentUser,
+    comments: r.comments,
   };
 }
 
@@ -132,7 +133,7 @@ export default function ProductReviewsContainer({
 
         <div className="divide-y divide-border">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-4 py-5 first:pt-0">
+            <div key={i} className="flex gap-4 py-5">
               <Skeleton className="size-10 shrink-0 rounded-full" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-start justify-between gap-4">

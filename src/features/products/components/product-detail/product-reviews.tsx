@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Star,
   Send,
   Heart,
   Trash2,
-  UserRound,
   ThumbsUp,
+  UserRound,
+  ChevronDown,
   CheckCircle2,
   MessageCircle,
   MoreHorizontal,
   MessageSquareText,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import { ReviewComment } from "@/types/review-comment";
@@ -40,6 +41,7 @@ import {
   reviewCommentsQueryKey,
 } from "@/features/comments/hooks/use-review-comments";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { useDeleteReview } from "@/features/reviews/hooks/use-delete-review";
 import { useCreateReviewComment } from "@/features/comments/hooks/use-create-review-comment";
 import { useDeleteReviewComment } from "@/features/comments/hooks/use-delete-review-comment";
 
@@ -51,6 +53,13 @@ export interface ProductReviewAuthor {
   memberSinceYears: number;
   reviewCount: number;
   thanksCount: number;
+}
+
+export interface ProductReviewCommentPreview {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { id: string; name: string; avatarUrl?: string | null };
 }
 
 export interface ProductReview {
@@ -66,6 +75,7 @@ export interface ProductReview {
   content?: string;
   images?: string[];
   isHelpfulByCurrentUser?: boolean;
+  comments?: ProductReviewCommentPreview[];
 }
 
 export interface ProductReviewSummary {
@@ -147,6 +157,49 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+function CommentPreviewList({
+  comments,
+  totalCount,
+  onViewAll,
+}: {
+  comments: ProductReviewCommentPreview[];
+  totalCount: number;
+  onViewAll: () => void;
+}) {
+  return (
+    <div className="mt-3 space-y-2.5 rounded-md bg-muted/40 p-3">
+      {comments.map((comment) => (
+        <div key={comment.id} className="flex items-start gap-2">
+          <Avatar className="size-6 shrink-0">
+            <AvatarImage
+              src={comment.author.avatarUrl ?? undefined}
+              alt={comment.author.name}
+            />
+            <AvatarFallback className="bg-secondary/10 text-[10px] font-semibold text-secondary">
+              {initials(comment.author.name)}
+            </AvatarFallback>
+          </Avatar>
+          <p className="min-w-0 flex-1 text-sm leading-relaxed">
+            <span className="font-semibold">{comment.author.name}</span>{" "}
+            <span className="text-muted-foreground">{comment.content}</span>
+          </p>
+        </div>
+      ))}
+
+      {totalCount > comments.length ? (
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="flex items-center gap-1 text-[13px] font-medium text-secondary"
+        >
+          Xem tất cả {totalCount} bình luận
+          <ChevronDown className="size-3.5" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function CommentRow({
   comment,
   currentUserId,
@@ -168,8 +221,8 @@ function CommentRow({
   const wasDeletingRef = useRef(false);
 
   const isDeleted = comment.isDeleted;
-  const canDelete =
-    !isDeleted && (canModerate || comment.author.id === currentUserId);
+  const isOwnComment = comment.author.id === currentUserId;
+  const canDelete = !isDeleted && (canModerate || isOwnComment);
 
   useEffect(() => {
     if (wasDeletingRef.current && !isDeleting) {
@@ -196,8 +249,16 @@ function CommentRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-wrap items-baseline gap-2">
             <p className="text-sm font-semibold">{comment.author.name}</p>
+            {isOwnComment ? (
+              <Badge
+                variant="outline"
+                className="h-4.5 gap-1 border-secondary/30 bg-secondary/10 px-1.5 text-[10px] font-normal text-secondary"
+              >
+                Bạn
+              </Badge>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               {formatCommentDate(comment.createdAt)}
             </p>
@@ -209,11 +270,8 @@ function CommentRow({
                 render={
                   <Button
                     type="button"
-                    size="sm"
                     variant="ghost"
-                    className={cn(
-                      "gap-1.5 px-2 text-muted-foreground hover:bg-transparent hover:text-secondary",
-                    )}
+                    className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-transparent hover:text-secondary"
                   >
                     <MoreHorizontal className="size-4" />
                   </Button>
@@ -225,11 +283,13 @@ function CommentRow({
                   onClick={() => setConfirmDeleteOpen(true)}
                 >
                   <Trash2 className="size-4" />
-                  Xóa
+                  Xóa bình luận
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : null}
+          ) : (
+            <div className="size-6 shrink-0" />
+          )}
         </div>
 
         {isDeleted ? (
@@ -291,11 +351,15 @@ function ReviewCommentThread({
   reviewId,
   currentUserId,
   canModerate,
+  canComment,
+  onClose,
 }: {
   slug: string;
   reviewId: string;
   currentUserId?: string;
   canModerate: boolean;
+  canComment: boolean;
+  onClose: () => void;
 }) {
   const [draft, setDraft] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -338,6 +402,12 @@ function ReviewCommentThread({
     );
   };
 
+  const handleCancel = () => {
+    setDraft("");
+    setReplyToId(null);
+    onClose();
+  };
+
   return (
     <div className="mt-3 space-y-3">
       {isLoading ? (
@@ -361,45 +431,56 @@ function ReviewCommentThread({
         </div>
       ) : null}
 
-      <div className="space-y-2">
-        {replyTarget ? (
-          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-            <span>
-              Đang trả lời <strong>{replyTarget.author.name}</strong>
-            </span>
-            <button
+      {canComment ? (
+        <div className="space-y-2">
+          {replyTarget ? (
+            <div className="flex items-center justify-between rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+              <span>
+                Đang trả lời <strong>{replyTarget.author.name}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setReplyToId(null)}
+                className="font-medium hover:text-secondary"
+              >
+                Hủy
+              </button>
+            </div>
+          ) : null}
+          <Textarea
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={
+              replyTarget
+                ? `Trả lời ${replyTarget.author.name}...`
+                : "Viết bình luận của bạn..."
+            }
+            className="min-h-20 resize-none"
+            disabled={createComment.isPending}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
               type="button"
-              onClick={() => setReplyToId(null)}
-              className="font-medium hover:text-secondary"
+              size="lg"
+              variant="outline"
+              disabled={createComment.isPending}
+              onClick={handleCancel}
             >
               Hủy
-            </button>
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              disabled={createComment.isPending || !draft.trim()}
+              onClick={handleSubmit}
+            >
+              {createComment.isPending ? <Spinner /> : <Send />}
+              {createComment.isPending ? "Đang gửi..." : "Gửi"}
+            </Button>
           </div>
-        ) : null}
-        <Textarea
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={
-            replyTarget
-              ? `Trả lời ${replyTarget.author.name}...`
-              : "Viết bình luận của bạn..."
-          }
-          className="min-h-20 resize-none"
-          disabled={createComment.isPending}
-        />
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            size="lg"
-            disabled={createComment.isPending || !draft.trim()}
-            onClick={handleSubmit}
-          >
-            {createComment.isPending ? <Spinner /> : <Send />}
-            {createComment.isPending ? "Đang gửi..." : "Gửi"}
-          </Button>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -417,9 +498,11 @@ export default function ProductReviews({
 }: ProductReviewsProps) {
   const [filter, setFilter] = useState<FilterKey>("moi-nhat");
   const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   const { data: currentUser } = useCurrentUser();
   const isAdmin = currentUser?.role === "ADMIN";
   const queryClient = useQueryClient();
+  const deleteReview = useDeleteReview();
 
   const filteredReviews = useMemo(() => {
     switch (filter) {
@@ -469,6 +552,13 @@ export default function ProductReviews({
           limit: COMMENTS_PAGE_LIMIT,
         }),
       staleTime: COMMENTS_PREFETCH_STALE_TIME,
+    });
+  };
+
+  const handleConfirmDeleteReview = () => {
+    if (!reviewToDelete) return;
+    deleteReview.mutate(reviewToDelete, {
+      onSuccess: () => setReviewToDelete(null),
     });
   };
 
@@ -556,7 +646,11 @@ export default function ProductReviews({
           {filteredReviews.map((review) => {
             const isOwnReview =
               !!currentUser && currentUser.id === review.author.id;
-            const showActions = !!currentUser && !isAdmin && !isOwnReview;
+            const showHelpful = !!currentUser && !isAdmin && !isOwnReview;
+            const canDeleteReview = isOwnReview || isAdmin;
+            const isThreadOpen = openCommentId === review.id;
+            const hasPreviewComments =
+              !!review.comments && review.comments.length > 0;
 
             return (
               <li key={review.id} className="flex gap-4 py-5 first:pt-0">
@@ -607,21 +701,49 @@ export default function ProductReviews({
                       </p>
                     </div>
 
-                    <div className="text-right sm:text-right">
-                      <div className="flex justify-end">
-                        <Stars value={review.rating} />
+                    <div className="flex items-start gap-1">
+                      <div className="text-right sm:text-right">
+                        <div className="flex justify-end">
+                          <Stars value={review.rating} />
+                        </div>
+                        <p className="mt-1 text-sm font-medium">
+                          {RATING_LABELS[review.rating]}
+                        </p>
+                        {review.verifiedPurchase ? (
+                          <Badge
+                            variant="outline"
+                            className="mt-1.5 gap-1 border-secondary/30 bg-secondary/10 text-secondary"
+                          >
+                            <CheckCircle2 className="size-3.5" />
+                            Đã mua hàng
+                          </Badge>
+                        ) : null}
                       </div>
-                      <p className="mt-1 text-sm font-medium">
-                        {RATING_LABELS[review.rating]}
-                      </p>
-                      {review.verifiedPurchase ? (
-                        <Badge
-                          variant="outline"
-                          className="mt-1.5 gap-1 border-secondary/30 bg-secondary/10 text-secondary"
-                        >
-                          <CheckCircle2 className="size-3.5" />
-                          Đã mua hàng
-                        </Badge>
+
+                      {canDeleteReview ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="px-2 text-muted-foreground hover:bg-transparent hover:text-secondary"
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            }
+                          />
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setReviewToDelete(review.id)}
+                            >
+                              <Trash2 className="size-4" />
+                              Xóa đánh giá
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       ) : null}
                     </div>
                   </div>
@@ -666,8 +788,8 @@ export default function ProductReviews({
                     </div>
                   ) : null}
 
-                  {showActions ? (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    {showHelpful ? (
                       <Button
                         type="button"
                         size="sm"
@@ -681,39 +803,52 @@ export default function ProductReviews({
                         )}
                       >
                         <ThumbsUp className="size-4" />
-                        Hữu ích{" "}
+                        {review.isHelpfulByCurrentUser
+                          ? "Bạn đã thích"
+                          : "Hữu ích"}{" "}
                         {review.helpfulCount > 0
                           ? `(${review.helpfulCount})`
                           : ""}
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onMouseEnter={() => handlePrefetchComments(review.id)}
-                        onTouchStart={() => handlePrefetchComments(review.id)}
-                        onClick={() => handleToggleComment(review.id)}
-                        className={cn(
-                          "gap-1.5 px-2 text-muted-foreground hover:bg-transparent hover:text-secondary",
-                          openCommentId === review.id &&
-                            "bg-secondary/10 text-secondary hover:bg-secondary/10 hover:text-secondary",
-                        )}
-                      >
-                        <MessageCircle className="size-4" />
-                        Bình luận{" "}
-                        {review.commentCount > 0
-                          ? `(${review.commentCount})`
-                          : ""}
-                      </Button>
-                    </div>
+                    ) : null}
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onMouseEnter={() => handlePrefetchComments(review.id)}
+                      onTouchStart={() => handlePrefetchComments(review.id)}
+                      onClick={() => handleToggleComment(review.id)}
+                      className={cn(
+                        "gap-1.5 px-2 text-muted-foreground hover:bg-transparent hover:text-secondary",
+                        isThreadOpen &&
+                          "bg-secondary/10 text-secondary hover:bg-secondary/10 hover:text-secondary",
+                      )}
+                    >
+                      <MessageCircle className="size-4" />
+                      Bình luận{" "}
+                      {review.commentCount > 0
+                        ? `(${review.commentCount})`
+                        : ""}
+                    </Button>
+                  </div>
+
+                  {hasPreviewComments && !isThreadOpen ? (
+                    <CommentPreviewList
+                      comments={review.comments!}
+                      totalCount={review.commentCount}
+                      onViewAll={() => handleToggleComment(review.id)}
+                    />
                   ) : null}
 
-                  {showActions && openCommentId === review.id ? (
+                  {isThreadOpen ? (
                     <ReviewCommentThread
                       slug={slug}
                       reviewId={review.id}
                       currentUserId={currentUser?.id}
                       canModerate={isAdmin}
+                      canComment={!!currentUser}
+                      onClose={() => setOpenCommentId(null)}
                     />
                   ) : null}
                 </div>
@@ -735,6 +870,19 @@ export default function ProductReviews({
           </Button>
         </div>
       ) : null}
+
+      <ConfirmActionDialog
+        open={!!reviewToDelete}
+        onOpenChange={(open) => !open && setReviewToDelete(null)}
+        icon={<Trash2 className="size-5" />}
+        title="Xóa đánh giá"
+        description="Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa"
+        pendingLabel="Đang xóa..."
+        isPending={deleteReview.isPending}
+        onConfirm={handleConfirmDeleteReview}
+        variant="destructive"
+      />
     </div>
   );
 }
