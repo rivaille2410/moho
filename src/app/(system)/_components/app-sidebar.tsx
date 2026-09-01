@@ -10,6 +10,7 @@ import {
   UsersIcon,
   PackageIcon,
   ReceiptIcon,
+  FileTextIcon,
   LayoutDashboardIcon,
 } from "lucide-react";
 
@@ -51,6 +52,11 @@ const data = {
           title: "Quản lý sản phẩm",
           url: "/dashboard/products",
           icon: <PackageIcon />,
+        },
+        {
+          title: "Quản lý bài viết",
+          url: "/dashboard/posts",
+          icon: <FileTextIcon />,
         },
         {
           title: "Quản lý đánh giá",

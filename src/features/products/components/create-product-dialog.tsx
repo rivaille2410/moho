@@ -133,7 +133,7 @@ export function CreateProductDialog() {
         }
       />
 
-      <DialogContent className="min-w-6xl">
+      <DialogContent className="w-[95vw] min-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Thêm sản phẩm mới</DialogTitle>
           <DialogDescription>
@@ -185,7 +185,7 @@ export function CreateProductDialog() {
               )}
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel>Giá bán</FieldLabel>
                 <Input

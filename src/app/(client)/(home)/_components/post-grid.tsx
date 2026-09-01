@@ -6,12 +6,12 @@ import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+
+import { PostListItem } from "@/types/post";
+import { PostCard, PostCardSkeleton } from "./post-card";
 import { useGridColumns } from "@/hooks/use-grid-columns";
 
-import { ProductListItem } from "@/types/product";
-import { ProductCard, ProductCardSkeleton } from "./product-card";
-
-interface ProductGridProps {
+interface PostGridProps {
   title?: string;
   hasMore?: boolean;
   isLoading: boolean;
@@ -19,29 +19,29 @@ interface ProductGridProps {
   skeletonCount?: number;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
-  products: ProductListItem[];
+  posts: PostListItem[];
 }
 
-export function ProductGrid({
+export function PostGrid({
+  posts,
   hasMore,
-  products,
   isLoading,
   onLoadMore,
   seeMoreHref,
   isLoadingMore,
-  title = "Sản phẩm",
+  title = "Bài viết",
   skeletonCount = 12,
-}: ProductGridProps) {
+}: PostGridProps) {
   const columns = useGridColumns();
 
   const visibleCount =
-    products.length < columns
-      ? products.length
-      : Math.floor(products.length / columns) * columns;
+    posts.length < columns
+      ? posts.length
+      : Math.floor(posts.length / columns) * columns;
 
-  const visibleProducts = products.slice(0, visibleCount);
+  const visiblePosts = posts.slice(0, visibleCount);
 
-  const hasHiddenRemainder = visibleCount < products.length;
+  const hasHiddenRemainder = visibleCount < posts.length;
 
   return (
     <section className="py-6">
@@ -62,11 +62,9 @@ export function ProductGrid({
       <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {isLoading
           ? Array.from({ length: skeletonCount }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
+              <PostCardSkeleton key={i} />
             ))
-          : visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          : visiblePosts.map((post) => <PostCard key={post.id} post={post} />)}
       </div>
 
       {!isLoading && onLoadMore && (hasMore || hasHiddenRemainder) && (

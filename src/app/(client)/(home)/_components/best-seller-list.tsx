@@ -1,6 +1,6 @@
 "use client";
 
-import ProductGrid from "./product-grid";
+import { ProductGrid } from "./product-grid";
 
 import {
   QueryBestSellerProductsParams,

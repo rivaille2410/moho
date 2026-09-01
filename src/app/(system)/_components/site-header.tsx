@@ -18,6 +18,7 @@ const ROUTE_LABELS: Record<string, string> = {
   categories: "Quản lý danh mục",
   orders: "Quản lý đơn hàng",
   reviews: "Quản lý đánh giá",
+  posts: "Quản lý bài viết",
 };
 
 function buildBreadcrumbItems(

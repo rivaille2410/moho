@@ -4,7 +4,7 @@ import { PackageX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-export default function ProductNotFound() {
+export function ProductNotFound() {
   return (
     <div className="wrapper flex flex-col items-center justify-center py-28 2xl:py-72 text-center">
       <div className="flex size-20 items-center justify-center rounded-full bg-muted">
