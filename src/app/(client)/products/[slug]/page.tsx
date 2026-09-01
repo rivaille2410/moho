@@ -11,7 +11,7 @@ import { Minus, Plus, CheckCircle2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import type { ProductVariant } from "@/types/product";
-import ProductGrid from "../../(home)/_components/product-grid";
+import { ProductGrid } from "../../(home)/_components/product-grid";
 
 import {
   Carousel,
@@ -28,7 +28,7 @@ import { usePublicProduct } from "@/features/products/hooks/use-public-product";
 import ProductDetailSkeleton from "@/features/products/components/product-detail/product-detail-skeleton";
 import ProductReviewsContainer from "@/features/products/components/product-detail/product-reviews-container";
 import { useRelatedProducts } from "@/features/products/hooks/use-related-products";
-import ProductNotFound from "@/features/products/components/product-detail/product-not-found";
+import { ProductNotFound } from "@/features/products/components/product-detail/product-not-found";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";

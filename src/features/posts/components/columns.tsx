@@ -4,19 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 
 import {
+  Eye,
   Copy,
+  Send,
   Trash2,
-  PenLine,
   Archive,
-  ImageOff,
   FileEdit,
-  CheckCircle2,
+  PenLine,
+  ImageOff,
   MoreHorizontal,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";
-import { type ProductListItem } from "@/types/product";
+import { type PostListItem } from "@/types/post";
 
 import {
   DropdownMenu,
@@ -38,47 +39,44 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { type DataTableFeatures } from "@/components/data-table/data-table-features";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
-const columnHelper = createColumnHelper<DataTableFeatures, ProductListItem>();
+const columnHelper = createColumnHelper<DataTableFeatures, PostListItem>();
 
 const statusLabel: Record<string, string> = {
   DRAFT: "Bản nháp",
-  ACTIVE: "Đang bán",
-  ARCHIVED: "Ngừng bán",
-};
-
-const statusIcon: Record<string, React.ElementType> = {
-  DRAFT: FileEdit,
-  ACTIVE: CheckCircle2,
-  ARCHIVED: Archive,
+  PUBLISHED: "Đã đăng",
+  ARCHIVED: "Đã lưu trữ",
 };
 
 const statusStyle: Record<string, string> = {
   DRAFT: "border-muted-foreground/20 bg-muted text-muted-foreground",
-  ACTIVE: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600",
+  PUBLISHED: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600",
   ARCHIVED: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
+const statusIcon: Record<string, React.ElementType> = {
+  DRAFT: FileEdit,
+  PUBLISHED: Send,
+  ARCHIVED: Archive,
+};
+
 interface ColumnsOptions {
-  onEdit: (product: ProductListItem) => void;
-  onDelete: (product: ProductListItem) => void;
-  onChangeStatus: (product: ProductListItem, status: string) => void;
+  onEdit: (post: PostListItem) => void;
+  onDelete: (post: PostListItem) => void;
+  onChangeStatus: (post: PostListItem, status: string) => void;
 }
 
 function handleCopyId(id: string) {
   navigator.clipboard.writeText(id);
-  toast.add({ type: "success", description: "Đã sao chép ID sản phẩm" });
+  toast.add({ type: "success", description: "Đã sao chép ID bài viết" });
 }
 
-function formatDate(value: string | Date) {
+function formatDate(value: string | Date | null) {
+  if (!value) return "—";
   return new Date(value).toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function formatPrice(value: number) {
-  return value.toLocaleString("vi-VN") + "đ";
 }
 
 export const getColumns = ({
@@ -111,26 +109,23 @@ export const getColumns = ({
       enableHiding: false,
     }),
 
-    columnHelper.accessor("name", {
+    columnHelper.accessor("title", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Sản phẩm" />
+        <DataTableColumnHeader column={column} title="Bài viết" />
       ),
       cell: ({ row }) => {
-        const product = row.original;
-        const thumbnail =
-          product.images.find((img) => img.isThumbnail)?.url ??
-          product.images[0]?.url;
+        const post = row.original;
 
         return (
           <Link
-            href={`/dashboard/products/${product.id}`}
-            className="flex items-center gap-3 group/product-link"
+            href={`/dashboard/posts/${post.id}`}
+            className="flex items-center gap-3 group/post-link"
           >
-            <div className="relative size-10 shrink-0 overflow-hidden rounded-md border bg-muted">
-              {thumbnail ? (
+            <div className="relative h-10 w-16 shrink-0 overflow-hidden rounded-sm border bg-muted">
+              {post.thumbnailUrl ? (
                 <Image
-                  src={thumbnail}
-                  alt={product.name}
+                  src={post.thumbnailUrl}
+                  alt={post.title}
                   fill
                   className="object-cover"
                 />
@@ -141,11 +136,11 @@ export const getColumns = ({
               )}
             </div>
             <div className="flex flex-col">
-              <span className="font-medium line-clamp-1 group-hover/product-link:text-secondary transition">
-                {product.name}
+              <span className="font-medium line-clamp-1 group-hover/post-link:text-secondary transition">
+                {post.title}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {product.sku}
+              <span className="text-xs text-muted-foreground line-clamp-1">
+                /{post.slug}
               </span>
             </div>
           </Link>
@@ -153,46 +148,16 @@ export const getColumns = ({
       },
     }),
 
-    columnHelper.accessor("price", {
+    columnHelper.accessor("viewCount", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Giá" />
+        <DataTableColumnHeader column={column} title="Lượt xem" />
       ),
-      cell: ({ row }) => {
-        const product = row.original;
-        return (
-          <div className="flex flex-col">
-            <span className="font-semibold text-secondary">
-              {formatPrice(product.price)}
-            </span>
-            {product.compareAtPrice && (
-              <span className="text-xs text-muted-foreground line-through font-medium">
-                {formatPrice(product.compareAtPrice)}
-              </span>
-            )}
-          </div>
-        );
-      },
-    }),
-
-    columnHelper.accessor("totalStock", {
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Tồn kho" />
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Eye className="size-3.5" />
+          <span>{row.getValue("viewCount")}</span>
+        </div>
       ),
-      cell: ({ row }) => {
-        const stock = row.getValue("totalStock") as number;
-        return (
-          <span className={cn(stock === 0 && "text-destructive font-medium")}>
-            {stock}
-          </span>
-        );
-      },
-    }),
-
-    columnHelper.accessor("soldCount", {
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Đã bán" />
-      ),
-      cell: ({ row }) => <span>{row.getValue("soldCount")}</span>,
     }),
 
     columnHelper.accessor("status", {
@@ -212,6 +177,13 @@ export const getColumns = ({
       },
     }),
 
+    columnHelper.accessor("publishedAt", {
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Ngày đăng" />
+      ),
+      cell: ({ row }) => <span>{formatDate(row.getValue("publishedAt"))}</span>,
+    }),
+
     columnHelper.accessor("createdAt", {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Ngày tạo" />
@@ -223,7 +195,7 @@ export const getColumns = ({
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const product = row.original;
+        const post = row.original;
 
         return (
           <DropdownMenu>
@@ -239,16 +211,16 @@ export const getColumns = ({
             <DropdownMenuContent align="end" className="w-fit">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleCopyId(product.id)}>
+                <DropdownMenuItem onClick={() => handleCopyId(post.id)}>
                   <Copy />
-                  Copy ID sản phẩm
+                  Copy ID bài viết
                 </DropdownMenuItem>
               </DropdownMenuGroup>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => onEdit(product)}>
+                <DropdownMenuItem onClick={() => onEdit(post)}>
                   <PenLine />
                   Chỉnh sửa
                 </DropdownMenuItem>
@@ -258,14 +230,14 @@ export const getColumns = ({
                     Đổi trạng thái
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
-                    {(["DRAFT", "ACTIVE", "ARCHIVED"] as const)
-                      .filter((status) => status !== product.status)
+                    {(["DRAFT", "PUBLISHED", "ARCHIVED"] as const)
+                      .filter((status) => status !== post.status)
                       .map((status) => {
                         const Icon = statusIcon[status];
                         return (
                           <DropdownMenuItem
                             key={status}
-                            onClick={() => onChangeStatus(product, status)}
+                            onClick={() => onChangeStatus(post, status)}
                           >
                             <Icon className="size-4" />
                             {statusLabel[status]}
@@ -277,10 +249,10 @@ export const getColumns = ({
 
                 <DropdownMenuItem
                   variant="destructive"
-                  onClick={() => onDelete(product)}
+                  onClick={() => onDelete(post)}
                 >
                   <Trash2 />
-                  Xoá sản phẩm
+                  Xoá bài viết
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
