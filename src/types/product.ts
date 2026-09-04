@@ -16,6 +16,7 @@ export type ProductVariant = {
   id: string;
   name: string;
   colorHex: string | null;
+  colorName: string | null;
   priceOverride: number | null;
   stock: number;
   sortOrder: number;
@@ -60,6 +61,12 @@ export type ProductsResponse = {
   meta: PaginationMeta;
 };
 
+export type PublicProductSortBy =
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "best_selling";
+
 export type QueryProductsParams = {
   page?: number;
   limit?: number;
@@ -67,6 +74,22 @@ export type QueryProductsParams = {
   status?: ProductStatus;
   categoryId?: string;
   outOfStock?: boolean;
+  onSale?: boolean;
+  colors?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: PublicProductSortBy;
+};
+
+export type PublicCategory = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type PublicColorOption = {
+  name: string;
+  hex: string | null;
 };
 
 export type CreateProductMaterialInput = {
@@ -78,6 +101,7 @@ export type CreateProductMaterialInput = {
 export type CreateProductVariantInput = {
   name: string;
   colorHex?: string;
+  colorName?: string;
   priceOverride?: number;
   stock: number;
   sortOrder?: number;
@@ -103,6 +127,7 @@ export type VariantPayload = {
   stock: number;
   sortOrder?: number;
   colorHex?: string | null;
+  colorName?: string | null;
   priceOverride?: number | null;
 };
 

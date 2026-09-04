@@ -77,6 +77,13 @@ export const variantSchema = z.object({
     .regex(/^#([0-9a-fA-F]{6})$/, "Mã màu không hợp lệ")
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  colorName: z
+    .string()
+    .trim()
+    .min(1, "Nhập tên màu")
+    .max(50, "Tên màu không được vượt quá 50 ký tự")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   priceOverride: z
     .number()
     .positive()

@@ -6,7 +6,7 @@ import { useMemo, useState, useRef, useEffect, useCallback, use } from "react";
 
 import DOMPurify from "dompurify";
 import Autoplay from "embla-carousel-autoplay";
-import { Minus, Plus, CheckCircle2, ChevronDown } from "lucide-react";
+import { Minus, Plus, CheckCircle2, ChevronDown, ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
@@ -194,55 +194,66 @@ export default function ProductPage({ params }: ProductPageProps) {
 
       <div className="wrapper space-y-3">
         <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2">
-          <div className="flex flex-col-reverse gap-3 md:sticky md:top-20 lg:flex-row">
-            <div className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-              {images.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => handleThumbnailClick(index)}
-                  className={cn(
-                    "relative size-17.5 shrink-0 overflow-hidden rounded-md border transition",
-                    index === activeImageIndex
-                      ? "border-secondary ring-3 ring-secondary/40"
-                      : "border-border hover:border-secondary hover:ring-3 hover:ring-secondary/40",
-                  )}
-                >
-                  <Image
-                    fill
-                    sizes="70px"
-                    src={image.url}
-                    alt={product.name}
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-
-            <Carousel
-              setApi={setCarouselApi}
-              plugins={[autoplayPlugin.current]}
-              className="flex-1"
-              opts={{ loop: true }}
-            >
-              <CarouselContent>
-                {images.map((image) => (
-                  <CarouselItem key={image.id}>
-                    <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-                      <Image
-                        fill
-                        priority
-                        alt={product.name}
-                        className="object-cover"
-                        src={image.url}
-                        sizes="(min-width: 768px) 560px, 100vw"
-                      />
-                    </div>
-                  </CarouselItem>
+          {images.length > 0 ? (
+            <div className="flex flex-col-reverse gap-3 md:sticky md:top-20 lg:flex-row">
+              <div className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+                {images.map((image, index) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => handleThumbnailClick(index)}
+                    className={cn(
+                      "relative size-17.5 shrink-0 overflow-hidden rounded-md border transition",
+                      index === activeImageIndex
+                        ? "border-secondary ring-3 ring-secondary/40"
+                        : "border-border hover:border-secondary hover:ring-3 hover:ring-secondary/40",
+                    )}
+                  >
+                    <Image
+                      fill
+                      sizes="70px"
+                      src={image.url}
+                      alt={product.name}
+                      className="object-cover"
+                    />
+                  </button>
                 ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
+              </div>
+
+              <Carousel
+                setApi={setCarouselApi}
+                plugins={[autoplayPlugin.current]}
+                className="flex-1"
+                opts={{ loop: true }}
+              >
+                <CarouselContent>
+                  {images.map((image) => (
+                    <CarouselItem key={image.id}>
+                      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+                        <Image
+                          fill
+                          priority
+                          alt={product.name}
+                          className="object-cover"
+                          src={image.url}
+                          sizes="(min-width: 768px) 560px, 100vw"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            </div>
+          ) : (
+            <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-lg bg-muted md:sticky md:top-20">
+              <div className="flex size-14 items-center justify-center rounded-full bg-background">
+                <ImageOff className="size-7 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Chưa có ảnh sản phẩm
+              </p>
+            </div>
+          )}
 
           <div>
             <h1 className="text-2xl font-semibold leading-snug">

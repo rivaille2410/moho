@@ -43,6 +43,7 @@ function toDefaultValues(variant?: ProductVariant | null): VariantFormValues {
     name: variant?.name ?? "",
     stock: variant?.stock ?? 0,
     colorHex: variant?.colorHex ?? undefined,
+    colorName: variant?.colorName ?? undefined,
     priceOverride: variant?.priceOverride ?? undefined,
   };
 }
@@ -71,6 +72,7 @@ export function ProductVariantDialog({
     const payload = {
       name: values.name,
       colorHex: values.colorHex ?? null,
+      colorName: values.colorName ?? null,
       priceOverride: values.priceOverride ?? null,
       stock: values.stock,
     };
@@ -90,7 +92,7 @@ export function ProductVariantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-lg">
+      <DialogContent className="min-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Sửa biến thể" : "Thêm biến thể"}</DialogTitle>
           <DialogDescription>
@@ -115,7 +117,7 @@ export function ProductVariantDialog({
               )}
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <Field>
                 <FieldLabel>Mã màu (không bắt buộc)</FieldLabel>
                 <div className="flex items-center gap-2">
@@ -134,6 +136,19 @@ export function ProductVariantDialog({
                 {form.formState.errors.colorHex && (
                   <FieldError>
                     {form.formState.errors.colorHex.message}
+                  </FieldError>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel>Tên màu (không bắt buộc)</FieldLabel>
+                <Input
+                  placeholder="VD: Xám tro"
+                  {...form.register("colorName")}
+                />
+                {form.formState.errors.colorName && (
+                  <FieldError>
+                    {form.formState.errors.colorName.message}
                   </FieldError>
                 )}
               </Field>

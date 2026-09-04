@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import { ImageOff } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { formatVND } from "@/lib/currency";
 import { ProductListItem } from "@/types/product";
@@ -55,7 +57,7 @@ export function ProductCard({ product }: { product: ProductListItem }) {
           </Badge>
         )}
 
-        {thumbnailUrl && (
+        {thumbnailUrl ? (
           <Image
             fill
             src={thumbnailUrl}
@@ -63,6 +65,10 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             className="object-cover"
             sizes="(min-width: 1536px) 16vw, (min-width: 768px) 20vw, 50vw"
           />
+        ) : (
+          <div className="flex size-full items-center justify-center text-muted-foreground">
+            <ImageOff className="size-6" />
+          </div>
         )}
       </div>
 

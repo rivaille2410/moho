@@ -13,9 +13,21 @@ import {
 } from "@/components/ui/carousel";
 
 const banners = [
-  { src: "/banner/banner-1.webp", alt: "Banner 1" },
-  { src: "/banner/banner-2.webp", alt: "Banner 2" },
-  { src: "/banner/banner-3.webp", alt: "Banner 3" },
+  {
+    desktop: "/banner/banner-1.webp",
+    mobile: "/banner/banner-mobile-1.webp",
+    alt: "Banner 1",
+  },
+  {
+    desktop: "/banner/banner-2.webp",
+    mobile: "/banner/banner-mobile-2.webp",
+    alt: "Banner 2",
+  },
+  {
+    desktop: "/banner/banner-3.webp",
+    mobile: "/banner/banner-mobile-3.webp",
+    alt: "Banner 3",
+  },
 ];
 
 const Banner = () => {
@@ -36,10 +48,22 @@ const Banner = () => {
       <CarouselContent>
         {banners.map((banner, index) => (
           <CarouselItem key={index}>
-            <div className="relative aspect-16/5 w-full">
+            {/* Mobile */}
+            <div className="relative aspect-square w-full sm:hidden">
               <Image
                 fill
-                src={banner.src}
+                src={banner.mobile}
+                alt={banner.alt}
+                priority={index === 0}
+                className="object-cover"
+              />
+            </div>
+
+            {/* Desktop */}
+            <div className="relative hidden aspect-16/5 w-full sm:block">
+              <Image
+                fill
+                src={banner.desktop}
                 alt={banner.alt}
                 priority={index === 0}
                 className="object-cover"
