@@ -1,5 +1,7 @@
 export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
+export type PublicPostSortBy = "newest" | "popular";
+
 export interface CreatePostInput {
   title: string;
   excerpt?: string;
@@ -51,4 +53,5 @@ export interface QueryPostsParams {
   limit?: number;
   search?: string;
   status?: PostStatus;
+  sortBy?: PublicPostSortBy;
 }

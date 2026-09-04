@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, PackageOpen } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { useGridColumns } from "@/hooks/use-grid-columns";
 
 import { ProductListItem } from "@/types/product";
+import { useGridColumns } from "@/hooks/use-grid-columns";
+
 import { ProductCard, ProductCardSkeleton } from "./product-card";
 
 interface ProductGridProps {
@@ -42,6 +43,7 @@ export function ProductGrid({
   const visibleProducts = products.slice(0, visibleCount);
 
   const hasHiddenRemainder = visibleCount < products.length;
+  const isEmpty = !isLoading && products.length === 0;
 
   return (
     <section className="py-6">
@@ -49,7 +51,7 @@ export function ProductGrid({
         <h2 className="text-lg font-bold tracking-tight sm:text-xl md:text-[22px]">
           {title}
         </h2>
-        {seeMoreHref && (
+        {seeMoreHref && !isEmpty && (
           <Link
             href={seeMoreHref}
             className="text-[13px] sm:text-sm font-medium text-secondary hover:underline"
@@ -59,15 +61,31 @@ export function ProductGrid({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-        {isLoading
-          ? Array.from({ length: skeletonCount }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
-          : visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-      </div>
+      {isEmpty ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <PackageOpen className="size-6 text-muted-foreground" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-foreground">
+              Chưa có sản phẩm nào
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Hãy quay lại sau nhé.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          {isLoading
+            ? Array.from({ length: skeletonCount }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))
+            : visibleProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+        </div>
+      )}
 
       {!isLoading && onLoadMore && (hasMore || hasHiddenRemainder) && (
         <div className="mt-8 flex justify-center">
@@ -76,7 +94,7 @@ export function ProductGrid({
             variant="ghost"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="text-secondary hover:text-secondary"
+            className="text-secondary hover:text-secondary hover:bg-secondary/10"
           >
             {isLoadingMore ? (
               <>

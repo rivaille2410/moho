@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   const { search } = new URL(request.url);
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/public/products/best-sellers${search}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/public/products/colors${search}`,
     {
       method: "GET",
       cache: "no-store",
