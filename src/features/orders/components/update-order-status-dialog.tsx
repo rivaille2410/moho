@@ -72,7 +72,7 @@ export function UpdateOrderStatusDialog({
 
   return (
     <Dialog open={!!order} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-lg">
+      <DialogContent className="md:min-w-lg">
         <DialogHeader>
           <DialogTitle>Cập nhật trạng thái đơn hàng</DialogTitle>
           <DialogDescription>Đơn hàng {order?.orderNumber}</DialogDescription>

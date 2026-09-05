@@ -44,7 +44,7 @@ function mapReview(r: Review): ProductReview {
   };
 }
 
-export default function ProductReviewsContainer({
+export function ProductReviewsContainer({
   slug,
   className,
 }: ProductReviewsContainerProps) {

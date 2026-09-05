@@ -25,9 +25,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { usePublicProduct } from "@/features/products/hooks/use-public-product";
-import ProductDetailSkeleton from "@/features/products/components/product-detail/product-detail-skeleton";
-import ProductReviewsContainer from "@/features/products/components/product-detail/product-reviews-container";
 import { useRelatedProducts } from "@/features/products/hooks/use-related-products";
+import { ProductDetailSkeleton } from "@/features/products/components/product-detail/product-detail-skeleton";
+import { ProductReviewsContainer } from "@/features/products/components/product-detail/product-reviews-container";
 import { ProductNotFound } from "@/features/products/components/product-detail/product-not-found";
 
 const formatVND = (value: number) =>

@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import {
+  X,
   Plus,
   Minus,
+  Check,
+  Ticket,
   QrCode,
   Banknote,
   ArrowLeft,
@@ -40,6 +43,7 @@ import { useProvinces } from "@/features/address/hooks/use-provinces";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useCreateOrder } from "@/features/orders/hooks/use-create-order";
 import { useProvinceWards } from "@/features/address/hooks/use-province-wards";
+import { useValidateVoucher } from "@/features/vouchers/hooks/use-validate-voucher";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
@@ -90,6 +94,15 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
 
+  // --- Voucher ---
+  const [voucherInput, setVoucherInput] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    voucherId: string;
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+  const validateVoucher = useValidateVoucher();
+
   useEffect(() => {
     if (!checkoutInfoHydrated) return;
 
@@ -115,7 +128,8 @@ export default function CheckoutPage() {
     useProvinceWards(provinceCode);
 
   const shippingFee = 0;
-  const grandTotal = totalPrice + shippingFee;
+  const discountAmount = appliedVoucher?.discountAmount ?? 0;
+  const grandTotal = Math.max(totalPrice + shippingFee - discountAmount, 0);
 
   const previewRef = "MOHO" + Date.now().toString().slice(-8);
 
@@ -139,6 +153,35 @@ export default function CheckoutPage() {
       quantity: item.quantity,
     }));
 
+  const handleApplyVoucher = () => {
+    const code = voucherInput.trim();
+    if (!code) return;
+
+    validateVoucher.mutate(
+      {
+        code,
+        subtotal: totalPrice,
+        productIds: items.map((item) => item.productId),
+        categoryIds: [],
+      },
+      {
+        onSuccess: (result) => {
+          setAppliedVoucher({
+            voucherId: result.voucherId,
+            code: result.code,
+            discountAmount: result.discountAmount,
+          });
+        },
+      },
+    );
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherInput("");
+    validateVoucher.reset();
+  };
+
   const onSubmit = async (data: CheckoutFormValues) => {
     if (items.length === 0) return;
 
@@ -153,6 +196,7 @@ export default function CheckoutPage() {
         note: data.note?.trim() || undefined,
         paymentMethod,
         items: buildOrderItems(),
+        voucherCode: appliedVoucher?.code,
       });
 
       setCheckoutInfo({
@@ -636,11 +680,92 @@ export default function CheckoutPage() {
 
             <div className="h-px bg-border" />
 
+            <div className="space-y-2">
+              {appliedVoucher ? (
+                <div className="relative flex items-center gap-3 overflow-hidden rounded-lg border border-dashed border-secondary bg-linear-to-r from-secondary/10 via-secondary/5 to-transparent px-3 py-2.5">
+                  <div className="absolute top-1/2 -left-2 size-4 -translate-y-1/2 rounded-full bg-background" />
+                  <div className="absolute top-1/2 -right-2 size-4 -translate-y-1/2 rounded-full bg-background" />
+
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                    <Ticket className="size-4.5" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-semibold tracking-wide">
+                        {appliedVoucher.code}
+                      </p>
+                      <Check className="size-3.5 shrink-0 text-secondary" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Bạn tiết kiệm được{" "}
+                      <span className="font-semibold text-secondary">
+                        {formatVND(appliedVoucher.discountAmount)}
+                      </span>
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRemoveVoucher}
+                    className="shrink-0 rounded-full p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    className="flex-1"
+                    value={voucherInput}
+                    onChange={(e) =>
+                      setVoucherInput(e.target.value.toUpperCase())
+                    }
+                    startIcon={<Ticket />}
+                    placeholder="Nhập mã giảm giá"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApplyVoucher();
+                      }
+                    }}
+                  />
+                  <Button
+                    size={"lg"}
+                    type="button"
+                    disabled={!voucherInput.trim() || validateVoucher.isPending}
+                    onClick={handleApplyVoucher}
+                  >
+                    {validateVoucher.isPending ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      "Áp dụng"
+                    )}
+                  </Button>
+                </div>
+              )}
+              {validateVoucher.isError && !appliedVoucher ? (
+                <p className="text-xs text-destructive">
+                  {validateVoucher.error.message}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="h-px bg-border" />
+
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Tạm tính</span>
                 <span className="font-medium">{formatVND(totalPrice)}</span>
               </div>
+              {appliedVoucher ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Giảm giá</span>
+                  <span className="font-medium text-secondary">
+                    -{formatVND(discountAmount)}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Phí vận chuyển</span>
                 <span className="font-medium">

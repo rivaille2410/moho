@@ -40,7 +40,7 @@ function Input({
   }
 
   return (
-    <div className="group/input relative">
+    <div className="group/input relative w-full">
       {startIcon && (
         <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within/input:text-primary [&_svg]:size-4">
           {startIcon}

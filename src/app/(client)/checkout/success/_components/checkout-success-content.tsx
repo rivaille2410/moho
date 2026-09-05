@@ -59,9 +59,7 @@ export function CheckoutSuccessContent() {
               <span className="text-sm text-muted-foreground">
                 Mã đơn hàng:
               </span>
-              <span className="font-mono text-sm font-semibold">
-                {orderRef}
-              </span>
+              <span className="text-sm font-semibold">{orderRef}</span>
               <button
                 type="button"
                 onClick={handleCopy}

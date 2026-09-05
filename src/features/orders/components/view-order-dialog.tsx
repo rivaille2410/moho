@@ -41,7 +41,7 @@ function formatDate(value: string | Date) {
 export function ViewOrderDialog({ order, onOpenChange }: ViewOrderDialogProps) {
   return (
     <Dialog open={!!order} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-xl">
+      <DialogContent className="md:min-w-xl">
         <DialogHeader>
           <DialogTitle>Đơn hàng {order?.orderNumber}</DialogTitle>
           <DialogDescription>

@@ -135,7 +135,7 @@ const ProfileInfoSection = () => {
           )}
         >
           <AvatarImage src={user?.avatar ?? undefined} alt={user?.name} />
-          <AvatarFallback className="bg-secondary/10 text-secondary text-2xl">
+          <AvatarFallback className="text-3xl">
             {user?.name.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>

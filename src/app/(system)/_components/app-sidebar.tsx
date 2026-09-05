@@ -8,6 +8,7 @@ import {
   TagsIcon,
   StarIcon,
   UsersIcon,
+  TicketIcon,
   PackageIcon,
   ReceiptIcon,
   FileTextIcon,
@@ -72,6 +73,11 @@ const data = {
           title: "Quản lý đơn hàng",
           url: "/dashboard/orders",
           icon: <ReceiptIcon />,
+        },
+        {
+          title: "Quản lý voucher",
+          url: "/dashboard/vouchers",
+          icon: <TicketIcon />,
         },
         {
           title: "Quản lý người dùng",

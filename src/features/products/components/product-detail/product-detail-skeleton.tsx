@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ProductDetailSkeleton() {
+export function ProductDetailSkeleton() {
   return (
     <div className="wrapper space-y-3">
       <div className="flex items-center gap-2">
