@@ -102,7 +102,7 @@ export function CreatePostDialog() {
         render={
           <Button size={"lg"}>
             <Plus className="size-4" />
-            Thêm bài viết
+            <span className="hidden xl:inline">Thêm bài viết</span>
           </Button>
         }
       />

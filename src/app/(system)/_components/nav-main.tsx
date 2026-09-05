@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import {
+  useSidebar,
   SidebarMenu,
   SidebarGroup,
   SidebarMenuItem,
@@ -29,6 +30,14 @@ export function NavMain({
   groups: NavMainGroup[];
   pathname: string;
 }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavigate = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <>
       {groups.map((group) => (
@@ -47,7 +56,7 @@ export function NavMain({
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.title}
-                      render={<Link href={item.url} />}
+                      render={<Link href={item.url} onClick={handleNavigate} />}
                     >
                       {item.icon}
                       <span>{item.title}</span>

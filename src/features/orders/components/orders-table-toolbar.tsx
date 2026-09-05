@@ -1,6 +1,7 @@
 import { type ReactTable } from "@tanstack/react-table";
 
 import { type Order } from "@/types/order";
+import { useExportOrders } from "@/features/orders/hooks/use-export-orders";
 
 import {
   Select,
@@ -9,6 +10,9 @@ import {
   SelectContent,
   SelectTrigger,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { ExcelIcon } from "@/components/icons/excel-icon";
 import { type DataTableFeatures } from "@/components/data-table/data-table-features";
 import { DataTableToolbarShell } from "@/components/data-table/data-table-toolbar-shell";
 
@@ -52,11 +56,29 @@ export function OrdersTableToolbar({
 }: OrdersTableToolbarProps) {
   const isFiltered = search.length > 0 || !!status;
 
+  const { mutate: exportOrders, isPending: isExporting } = useExportOrders();
+
   return (
     <DataTableToolbarShell
       table={table}
       search={search}
       isFiltered={isFiltered}
+      actions={
+        <Button
+          size="lg"
+          variant="outline"
+          className="shrink-0"
+          disabled={isExporting}
+          onClick={() => exportOrders({ search, status })}
+        >
+          {isExporting ? (
+            <Spinner className="size-4 text-secondary" />
+          ) : (
+            <ExcelIcon className="size-5" />
+          )}
+          <span className="hidden xl:inline">Xuất Excel</span>
+        </Button>
+      }
       columnLabels={orderColumnLabels}
       onReset={() => {
         onSearchChange("");
@@ -72,7 +94,7 @@ export function OrdersTableToolbar({
           onStatusChange(toFilterValue(value));
         }}
       >
-        <SelectTrigger className="w-fit">
+        <SelectTrigger className="w-full lg:w-fit">
           <SelectValue placeholder="Trạng thái" />
         </SelectTrigger>
         <SelectContent>

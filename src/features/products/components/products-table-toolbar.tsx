@@ -87,27 +87,31 @@ export function ProductsTableToolbar({
             <Button
               size="lg"
               variant="destructive"
+              className="shrink-0"
               onClick={() =>
                 onBulkDelete(selectedRows.map((row) => row.original))
               }
             >
               <Trash2 className="size-4" />
-              Xoá đã chọn ({selectedCount})
+              <span className="hidden xl:inline">
+                Xoá đã chọn ({selectedCount})
+              </span>
             </Button>
           )}
 
           <Button
             size="lg"
             variant="outline"
+            className="shrink-0"
             disabled={isExporting}
             onClick={() => exportProducts({ search, status, outOfStock })}
           >
             {isExporting ? (
               <Spinner className="size-4 text-secondary" />
             ) : (
-              <ExcelIcon className="size-4.5" />
+              <ExcelIcon className="size-5" />
             )}
-            Xuất Excel
+            <span className="hidden xl:inline">Xuất Excel</span>
           </Button>
 
           <CreateProductDialog />
@@ -129,7 +133,7 @@ export function ProductsTableToolbar({
           onStatusChange(toFilterValue(value) as ProductStatus | undefined)
         }
       >
-        <SelectTrigger className="w-fit">
+        <SelectTrigger className="w-full lg:w-fit">
           <SelectValue placeholder="Trạng thái" />
         </SelectTrigger>
         <SelectContent>
@@ -151,7 +155,7 @@ export function ProductsTableToolbar({
           );
         }}
       >
-        <SelectTrigger className="w-fit h-8">
+        <SelectTrigger className="w-full sm:w-fit h-8">
           <SelectValue placeholder="Tồn kho" />
         </SelectTrigger>
         <SelectContent>

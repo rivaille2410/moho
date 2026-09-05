@@ -36,22 +36,22 @@ export function DataTablePagination<TData extends RowData>({
   pageSizeOptions = [10, 20, 25, 30, 40, 50],
 }: DataTablePaginationProps<TData>) {
   return (
-    <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-sm text-muted-foreground text-center sm:text-left sm:flex-1">
+    <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
         {table.getFilteredSelectedRowModel().rows.length} / {meta.totalItems}{" "}
         dòng được chọn.
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:space-x-6 lg:space-x-8">
-        <div className="flex items-center justify-center gap-2 sm:justify-start">
-          <p className="text-sm font-medium whitespace-nowrap">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:justify-end sm:gap-6 lg:gap-8">
+        <div className="flex items-center gap-2">
+          <p className="hidden text-sm font-medium whitespace-nowrap sm:inline">
             Số dòng / trang
           </p>
           <Select
             value={`${meta.limit}`}
             onValueChange={(value) => onLimitChange(Number(value))}
           >
-            <SelectTrigger className="w-17.5 h-8">
+            <SelectTrigger className="h-8 w-17.5">
               <SelectValue placeholder={meta.limit} />
             </SelectTrigger>
             <SelectContent side="top">
@@ -64,12 +64,12 @@ export function DataTablePagination<TData extends RowData>({
           </Select>
         </div>
 
-        <div className="flex items-center justify-center gap-4 sm:justify-between sm:gap-0">
-          <div className="w-auto sm:w-25 flex items-center justify-center text-sm font-medium whitespace-nowrap">
-            Trang {meta.page} / {meta.totalPages || 1}
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium whitespace-nowrap">
+            {meta.page}/{meta.totalPages || 1}
+          </span>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1">
             <Button
               size="icon"
               variant="outline"

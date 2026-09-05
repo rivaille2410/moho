@@ -72,7 +72,7 @@ export function ReviewsTableToolbar({
           onRatingChange(filterValue ? Number(filterValue) : undefined);
         }}
       >
-        <SelectTrigger className="w-fit">
+        <SelectTrigger className="w-full lg:w-fit">
           <SelectValue placeholder="Đánh giá" />
         </SelectTrigger>
         <SelectContent>

@@ -114,7 +114,7 @@ export function CreateVoucherDialog({ onCreated }: CreateVoucherDialogProps) {
         render={
           <Button size={"lg"}>
             <Plus className="size-4" />
-            Thêm voucher
+            <span className="hidden xl:inline">Thêm voucher</span>
           </Button>
         }
       />
