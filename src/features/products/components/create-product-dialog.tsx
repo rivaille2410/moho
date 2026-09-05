@@ -128,7 +128,7 @@ export function CreateProductDialog() {
         render={
           <Button size={"lg"}>
             <Plus className="size-4" />
-            Thêm sản phẩm
+            <span className="hidden xl:inline">Thêm sản phẩm</span>
           </Button>
         }
       />

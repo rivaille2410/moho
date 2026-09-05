@@ -1,6 +1,6 @@
 "use client";
 
-import { FileSpreadsheet, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { type ReactTable } from "@tanstack/react-table";
 
 import { CreateUserDialog } from "./create-user-dialog";
@@ -98,27 +98,31 @@ export function UsersTableToolbar({
             <Button
               size="lg"
               variant="destructive"
+              className="shrink-0"
               onClick={() =>
                 onBulkDelete(selectedRows.map((row) => row.original))
               }
             >
               <Trash2 className="size-4" />
-              Xoá đã chọn ({selectedCount})
+              <span className="hidden xl:inline">
+                Xoá đã chọn ({selectedCount})
+              </span>
             </Button>
           )}
 
           <Button
             size="lg"
             variant="outline"
+            className="shrink-0"
             disabled={isExporting}
             onClick={() => exportUsers({ search, role, banned, emailVerified })}
           >
             {isExporting ? (
               <Spinner className="size-4 text-secondary" />
             ) : (
-              <ExcelIcon className="size-4.5" />
+              <ExcelIcon className="size-5" />
             )}
-            Xuất Excel
+            <span className="hidden xl:inline">Xuất Excel</span>
           </Button>
 
           <CreateUserDialog />
@@ -141,7 +145,7 @@ export function UsersTableToolbar({
           onRoleChange(toFilterValue(value))
         }
       >
-        <SelectTrigger className="w-fit">
+        <SelectTrigger className="w-full lg:w-fit">
           <SelectValue placeholder="Vai trò" />
         </SelectTrigger>
         <SelectContent>
@@ -163,7 +167,7 @@ export function UsersTableToolbar({
           );
         }}
       >
-        <SelectTrigger className="w-fit h-8">
+        <SelectTrigger className="w-full lg:w-fit h-8">
           <SelectValue placeholder="Xác thực" />
         </SelectTrigger>
         <SelectContent>
@@ -185,7 +189,7 @@ export function UsersTableToolbar({
           );
         }}
       >
-        <SelectTrigger className="w-fit h-8">
+        <SelectTrigger className="w-full lg:w-fit h-8">
           <SelectValue placeholder="Trạng thái" />
         </SelectTrigger>
         <SelectContent>

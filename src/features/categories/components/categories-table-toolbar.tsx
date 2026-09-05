@@ -11,6 +11,7 @@ import {
 } from "@/features/categories/hooks/use-category-tree";
 import { type CategoryListItem } from "@/types/category";
 import { CategoryTreeItemLabel } from "./category-tree-item-label";
+import { useExportCategories } from "@/features/categories/hooks/use-export-categories";
 
 import {
   Select,
@@ -20,6 +21,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { ExcelIcon } from "@/components/icons/excel-icon";
 import { type DataTableFeatures } from "@/components/data-table/data-table-features";
 import { DataTableToolbarShell } from "@/components/data-table/data-table-toolbar-shell";
 
@@ -69,6 +72,9 @@ export function CategoriesTableToolbar({
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedCount = selectedRows.length;
 
+  const { mutate: exportCategories, isPending: isExporting } =
+    useExportCategories();
+
   return (
     <DataTableToolbarShell
       table={table}
@@ -80,14 +86,32 @@ export function CategoriesTableToolbar({
             <Button
               size="lg"
               variant="destructive"
+              className="shrink-0"
               onClick={() =>
                 onBulkDelete(selectedRows.map((row) => row.original))
               }
             >
               <Trash2 className="size-4" />
-              Xoá đã chọn ({selectedCount})
+              <span className="hidden xl:inline">
+                Xoá đã chọn ({selectedCount})
+              </span>
             </Button>
           )}
+
+          <Button
+            size="lg"
+            variant="outline"
+            className="shrink-0"
+            disabled={isExporting}
+            onClick={() => exportCategories({ search, parentId })}
+          >
+            {isExporting ? (
+              <Spinner className="size-4 text-secondary" />
+            ) : (
+              <ExcelIcon className="size-5" />
+            )}
+            <span className="hidden xl:inline">Xuất Excel</span>
+          </Button>
 
           <CreateCategoryDialog onCreated={onCreated} />
         </>
@@ -107,7 +131,7 @@ export function CategoriesTableToolbar({
           onParentChange(toFilterValue(value))
         }
       >
-        <SelectTrigger className="w-fit">
+        <SelectTrigger className="w-full lg:w-fit">
           <SelectValue placeholder="Danh mục cha" />
         </SelectTrigger>
         <SelectContent>

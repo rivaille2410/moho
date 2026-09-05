@@ -97,7 +97,7 @@ export function CreateCategoryDialog({ onCreated }: CreateCategoryDialogProps) {
         render={
           <Button size={"lg"}>
             <Plus className="size-4" />
-            Thêm danh mục
+            <span className="hidden xl:inline">Thêm danh mục</span>
           </Button>
         }
       />

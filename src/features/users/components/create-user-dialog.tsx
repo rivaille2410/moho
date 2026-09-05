@@ -77,7 +77,7 @@ export function CreateUserDialog() {
         render={
           <Button size={"lg"}>
             <Plus className="size-4" />
-            Thêm người dùng
+            <span className="hidden xl:inline">Thêm người dùng</span>
           </Button>
         }
       />
