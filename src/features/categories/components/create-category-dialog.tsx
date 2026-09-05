@@ -102,7 +102,7 @@ export function CreateCategoryDialog({ onCreated }: CreateCategoryDialogProps) {
         }
       />
 
-      <DialogContent className="min-w-xl">
+      <DialogContent className="md:min-w-xl">
         <DialogHeader>
           <DialogTitle>Thêm danh mục mới</DialogTitle>
           <DialogDescription>

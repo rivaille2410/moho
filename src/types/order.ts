@@ -58,6 +58,7 @@ export type CreateOrderInput = {
   recipientPhone: string;
   shippingAddress: string;
   note?: string;
+  voucherCode?: string;
   paymentMethod?: PaymentMethod;
   items: CreateOrderItemInput[];
 };

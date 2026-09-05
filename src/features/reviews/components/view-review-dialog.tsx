@@ -46,7 +46,7 @@ export function ViewReviewDialog({
 
   return (
     <Dialog open={!!review} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-lg gap-5">
+      <DialogContent className="md:min-w-lg gap-5">
         <DialogHeader>
           <DialogTitle>Chi tiết đánh giá</DialogTitle>
           <DialogDescription>

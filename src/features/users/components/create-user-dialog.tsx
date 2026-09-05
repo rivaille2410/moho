@@ -82,7 +82,7 @@ export function CreateUserDialog() {
         }
       />
 
-      <DialogContent className="min-w-xl">
+      <DialogContent className="md:min-w-xl">
         <DialogHeader>
           <DialogTitle>Thêm người dùng mới</DialogTitle>
           <DialogDescription>

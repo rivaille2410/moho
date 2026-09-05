@@ -92,7 +92,7 @@ export function ProductVariantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-2xl">
+      <DialogContent className="md:min-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Sửa biến thể" : "Thêm biến thể"}</DialogTitle>
           <DialogDescription>

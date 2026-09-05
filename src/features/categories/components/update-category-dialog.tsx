@@ -104,7 +104,7 @@ export function UpdateCategoryDialog({
 
   return (
     <Dialog open={!!category} onOpenChange={handleOpenChange}>
-      <DialogContent className="min-w-xl">
+      <DialogContent className="md:min-w-xl">
         <DialogHeader>
           <DialogTitle>Chỉnh sửa danh mục</DialogTitle>
           <DialogDescription>
