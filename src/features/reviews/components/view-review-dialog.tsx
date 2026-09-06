@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+
 import {
   Star,
   Users,
@@ -11,7 +12,6 @@ import {
   MessageSquareText,
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { type Review } from "@/types/review";
 
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ViewReviewDialogProps {
   review: Review | null;
@@ -46,7 +47,7 @@ export function ViewReviewDialog({
 
   return (
     <Dialog open={!!review} onOpenChange={onOpenChange}>
-      <DialogContent className="md:min-w-lg gap-5">
+      <DialogContent className="md:min-w-xl gap-5">
         <DialogHeader>
           <DialogTitle>Chi tiết đánh giá</DialogTitle>
           <DialogDescription>
@@ -56,24 +57,19 @@ export function ViewReviewDialog({
 
         {review && (
           <div className="flex flex-col gap-4">
-            {/* Author + rating */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="relative size-10 shrink-0 overflow-hidden rounded-full border bg-muted">
-                  {review.author.avatarUrl ? (
-                    <Image
-                      fill
+                <Avatar className="size-9">
+                  {review.author.avatarUrl && (
+                    <AvatarImage
                       src={review.author.avatarUrl}
-                      sizes="40px"
-                      className="object-cover"
                       alt={review.author.name}
                     />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-sm font-semibold text-muted-foreground">
-                      {review.author.name.charAt(0).toUpperCase()}
-                    </div>
                   )}
-                </div>
+                  <AvatarFallback>
+                    {review.author.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -105,7 +101,6 @@ export function ViewReviewDialog({
                     </span>
                   )}
 
-                  {/* Trust strip — only meaningful for registered users */}
                   {review.author.isRegisteredUser && (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -141,7 +136,6 @@ export function ViewReviewDialog({
               </div>
             </div>
 
-            {/* Variant / used-for tags */}
             {((review.variantInfo && review.variantInfo.length > 0) ||
               review.usedForLabel) && (
               <div className="flex flex-wrap items-center gap-1.5">
@@ -171,12 +165,10 @@ export function ViewReviewDialog({
               </div>
             )}
 
-            {/* Content */}
-            <p className="whitespace-pre-line rounded-md border bg-muted/40 px-3 py-2 text-[15px] leading-relaxed">
+            <p className="whitespace-pre-line rounded-md border bg-muted/40 px-3 py-2 leading-relaxed">
               {review.content}
             </p>
 
-            {/* Images */}
             {review.images.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {review.images.map((url, i) => (
@@ -198,7 +190,6 @@ export function ViewReviewDialog({
 
             <Separator />
 
-            {/* Footer */}
             <div className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Heart className="size-3.5" />

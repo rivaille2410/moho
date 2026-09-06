@@ -28,6 +28,7 @@ import {
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { type DataTableFeatures } from "@/components/data-table/data-table-features";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -80,21 +81,15 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
         const { author, verifiedPurchase } = row.original;
         return (
           <div className="flex items-center gap-2">
-            <div className="relative size-9 shrink-0 overflow-hidden rounded-full border bg-muted">
-              {author.avatarUrl ? (
-                <Image
-                  fill
-                  src={author.avatarUrl}
-                  sizes="36px"
-                  className="object-cover"
-                  alt={author.name}
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-xs font-medium text-muted-foreground">
-                  {author.name.charAt(0).toUpperCase()}
-                </div>
+            <Avatar className="size-9">
+              {author.avatarUrl && (
+                <AvatarImage src={author.avatarUrl} alt={author.name} />
               )}
-            </div>
+              <AvatarFallback>
+                {author.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+
             <div className="flex flex-col gap-0.5">
               <span className="font-medium line-clamp-1">{author.name}</span>
               {author.email && (

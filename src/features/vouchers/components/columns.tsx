@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+
 import {
+  Ban,
   Copy,
+  Clock,
   Trash2,
   PenLine,
   PlayIcon,
@@ -53,6 +56,14 @@ const statusStyle: Record<string, string> = {
   PAUSED: "border-amber-500/20 bg-amber-500/10 text-amber-600",
   EXPIRED: "border-destructive/20 bg-destructive/10 text-destructive",
   DEPLETED: "border-destructive/20 bg-destructive/10 text-destructive",
+};
+
+const statusIcon: Record<string, React.ElementType> = {
+  DRAFT: FileEdit,
+  ACTIVE: PlayIcon,
+  PAUSED: PauseIcon,
+  EXPIRED: Clock,
+  DEPLETED: Ban,
 };
 
 const scopeLabel: Record<string, string> = {
@@ -188,11 +199,13 @@ export const getColumns = ({
       ),
       cell: ({ row }) => {
         const status = row.getValue("effectiveStatus") as string;
+        const Icon = statusIcon[status];
         return (
           <Badge
             variant="outline"
-            className={cn("font-medium", statusStyle[status])}
+            className={cn("gap-1 font-medium", statusStyle[status])}
           >
+            {Icon && <Icon className="size-3" />}
             {statusLabel[status] ?? status}
           </Badge>
         );
@@ -222,6 +235,8 @@ export const getColumns = ({
           voucher.effectiveStatus === "DRAFT" ||
           voucher.effectiveStatus === "PAUSED";
         const isActive = voucher.effectiveStatus === "ACTIVE";
+        const isDraft = voucher.effectiveStatus === "DRAFT";
+        const canChangeStatus = isDraftOrPaused || isActive || isDraft;
 
         return (
           <DropdownMenu>
@@ -251,37 +266,39 @@ export const getColumns = ({
                   Chỉnh sửa
                 </DropdownMenuItem>
 
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    Đổi trạng thái
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {isDraftOrPaused && (
-                      <DropdownMenuItem
-                        onClick={() => onChangeStatus(voucher, "ACTIVE")}
-                      >
-                        <PlayIcon className="size-4" />
-                        Kích hoạt
-                      </DropdownMenuItem>
-                    )}
-                    {isActive && (
-                      <DropdownMenuItem
-                        onClick={() => onChangeStatus(voucher, "PAUSED")}
-                      >
-                        <PauseIcon className="size-4" />
-                        Tạm dừng
-                      </DropdownMenuItem>
-                    )}
-                    {voucher.effectiveStatus === "DRAFT" && (
-                      <DropdownMenuItem
-                        onClick={() => onChangeStatus(voucher, "DRAFT")}
-                      >
-                        <FileEdit className="size-4" />
-                        Chuyển về bản nháp
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
+                {canChangeStatus && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      Đổi trạng thái
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {isDraftOrPaused && (
+                        <DropdownMenuItem
+                          onClick={() => onChangeStatus(voucher, "ACTIVE")}
+                        >
+                          <PlayIcon className="size-4" />
+                          Kích hoạt
+                        </DropdownMenuItem>
+                      )}
+                      {isActive && (
+                        <DropdownMenuItem
+                          onClick={() => onChangeStatus(voucher, "PAUSED")}
+                        >
+                          <PauseIcon className="size-4" />
+                          Tạm dừng
+                        </DropdownMenuItem>
+                      )}
+                      {isDraft && (
+                        <DropdownMenuItem
+                          onClick={() => onChangeStatus(voucher, "DRAFT")}
+                        >
+                          <FileEdit className="size-4" />
+                          Chuyển về bản nháp
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
 
                 <DropdownMenuItem
                   variant="destructive"
