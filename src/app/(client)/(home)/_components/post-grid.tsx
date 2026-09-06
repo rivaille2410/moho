@@ -35,14 +35,13 @@ export function PostGrid({
 }: PostGridProps) {
   const columns = useGridColumns();
 
-  const visibleCount =
-    posts.length < columns
+  const visibleCount = !hasMore
+    ? posts.length
+    : posts.length < columns
       ? posts.length
       : Math.floor(posts.length / columns) * columns;
 
   const visiblePosts = posts.slice(0, visibleCount);
-
-  const hasHiddenRemainder = visibleCount < posts.length;
   const isEmpty = !isLoading && posts.length === 0;
 
   return (
@@ -87,14 +86,14 @@ export function PostGrid({
         </div>
       )}
 
-      {!isLoading && onLoadMore && (hasMore || hasHiddenRemainder) && (
+      {!isLoading && onLoadMore && hasMore && (
         <div className="mt-8 flex justify-center">
           <Button
             size={"lg"}
             variant="ghost"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="text-secondary hover:text-secondary"
+            className="text-secondary hover:text-secondary hover:bg-secondary/10"
           >
             {isLoadingMore ? (
               <>

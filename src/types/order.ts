@@ -6,7 +6,32 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
-export type PaymentMethod = "COD" | "BANK_TRANSFER";
+export type PaymentMethod =
+  | "COD"
+  | "BANK_TRANSFER"
+  | "VNPAY"
+  | "MOMO"
+  | "ZALOPAY";
+
+export type PaymentStatus =
+  | "PENDING"
+  | "AWAITING_CONFIRM"
+  | "CONFIRMED"
+  | "FAILED"
+  | "REFUNDED"
+  | "PARTIALLY_REFUNDED";
+
+export type ConfirmationType = "MANUAL" | "WEBHOOK" | "COD_COLLECTION";
+
+export type Payment = {
+  id: string;
+  method: PaymentMethod;
+  confirmationType: ConfirmationType;
+  status: PaymentStatus;
+  amount: number;
+  confirmedAt?: string;
+  proofImageUrl?: string;
+};
 
 export type OrderUser = {
   id: string;
@@ -32,7 +57,7 @@ export type Order = {
   userId: string;
   user: OrderUser;
   status: OrderStatus;
-  paymentMethod: PaymentMethod;
+  payment?: Payment;
   subtotal: string;
   shippingFee: string;
   discount: string;
@@ -72,6 +97,7 @@ export type QueryOrdersParams = {
   page?: number;
   limit?: number;
   status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
   userId?: string;
   search?: string;
 };

@@ -148,13 +148,7 @@ function Stars({ value, size = 16 }: { value: number; size?: number }) {
 }
 
 function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(-2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase();
+  return name.charAt(0).toUpperCase();
 }
 
 function CommentPreviewList({
@@ -175,7 +169,7 @@ function CommentPreviewList({
               src={comment.author.avatarUrl ?? undefined}
               alt={comment.author.name}
             />
-            <AvatarFallback className="bg-secondary/10 text-[10px] font-semibold text-secondary">
+            <AvatarFallback className="text-xs">
               {initials(comment.author.name)}
             </AvatarFallback>
           </Avatar>
@@ -242,7 +236,7 @@ function CommentRow({
           src={comment.author.avatarUrl ?? undefined}
           alt={comment.author.name}
         />
-        <AvatarFallback className="bg-secondary/10 text-xs font-semibold text-secondary">
+        <AvatarFallback className="text-sm">
           {initials(comment.author.name)}
         </AvatarFallback>
       </Avatar>
@@ -647,19 +641,20 @@ export default function ProductReviews({
             const isOwnReview =
               !!currentUser && currentUser.id === review.author.id;
             const showHelpful = !!currentUser && !isAdmin && !isOwnReview;
-            const canDeleteReview = isOwnReview || isAdmin;
+            const canComment = !!currentUser && !isAdmin;
+            const canDeleteReview = isOwnReview;
             const isThreadOpen = openCommentId === review.id;
             const hasPreviewComments =
               !!review.comments && review.comments.length > 0;
 
             return (
               <li key={review.id} className="flex gap-4 py-5 first:pt-0">
-                <Avatar className="size-10 shrink-0">
+                <Avatar className="size-9 shrink-0">
                   <AvatarImage
                     src={review.author.avatarUrl ?? undefined}
                     alt={review.author.name}
                   />
-                  <AvatarFallback className="bg-secondary/10 text-sm font-semibold text-secondary">
+                  <AvatarFallback className="text-base">
                     {initials(review.author.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -812,25 +807,27 @@ export default function ProductReviews({
                       </Button>
                     ) : null}
 
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onMouseEnter={() => handlePrefetchComments(review.id)}
-                      onTouchStart={() => handlePrefetchComments(review.id)}
-                      onClick={() => handleToggleComment(review.id)}
-                      className={cn(
-                        "gap-1.5 px-2 text-muted-foreground hover:bg-transparent hover:text-secondary",
-                        isThreadOpen &&
-                          "bg-secondary/10 text-secondary hover:bg-secondary/10 hover:text-secondary",
-                      )}
-                    >
-                      <MessageCircle className="size-4" />
-                      Bình luận{" "}
-                      {review.commentCount > 0
-                        ? `(${review.commentCount})`
-                        : ""}
-                    </Button>
+                    {canComment ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onMouseEnter={() => handlePrefetchComments(review.id)}
+                        onTouchStart={() => handlePrefetchComments(review.id)}
+                        onClick={() => handleToggleComment(review.id)}
+                        className={cn(
+                          "gap-1.5 px-2 text-muted-foreground hover:bg-transparent hover:text-secondary",
+                          isThreadOpen &&
+                            "bg-secondary/10 text-secondary hover:bg-secondary/10 hover:text-secondary",
+                        )}
+                      >
+                        <MessageCircle className="size-4" />
+                        Bình luận{" "}
+                        {review.commentCount > 0
+                          ? `(${review.commentCount})`
+                          : ""}
+                      </Button>
+                    ) : null}
                   </div>
 
                   {hasPreviewComments && !isThreadOpen ? (
@@ -847,7 +844,7 @@ export default function ProductReviews({
                       reviewId={review.id}
                       currentUserId={currentUser?.id}
                       canModerate={isAdmin}
-                      canComment={!!currentUser}
+                      canComment={canComment}
                       onClose={() => setOpenCommentId(null)}
                     />
                   ) : null}
