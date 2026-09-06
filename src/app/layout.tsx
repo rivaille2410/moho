@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { Toaster } from "@/components/ui/toast";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { CartSyncProvider } from "@/components/providers/cart-sync-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -35,8 +36,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col font-sans">
         <QueryProvider>
-          <Toaster />
-          {children}
+          <CartSyncProvider>
+            <Toaster />
+            {children}
+          </CartSyncProvider>
         </QueryProvider>
       </body>
     </html>

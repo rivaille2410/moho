@@ -21,7 +21,7 @@ import { useForm, Controller } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
 import { useCheckoutInfoStore } from "@/store/checkout-info";
-import { useCartStore, useCartTotalPrice } from "@/store/cart";
+import { useCartView } from "@/features/cart/hooks/use-cart-view";
 import { CreateOrderItemInput, PaymentMethod } from "@/types/order";
 import { CheckoutFormValues, checkoutSchema } from "@/schemas/order";
 
@@ -61,10 +61,8 @@ function RequiredMark() {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const items = useCartStore((state) => state.items);
-  const hasHydrated = useCartStore((state) => state.hasHydrated);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const totalPrice = useCartTotalPrice();
+  const { items, hasHydrated, isMerging, updateQuantity } = useCartView();
+  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const { data: me } = useCurrentUser();
   const { mutateAsync: createOrder } = useCreateOrder();
@@ -94,7 +92,6 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
 
-  // --- Voucher ---
   const [voucherInput, setVoucherInput] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<{
     voucherId: string;
@@ -213,7 +210,9 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!hasHydrated) {
+  const isLoading = !hasHydrated || isMerging;
+
+  if (isLoading) {
     return (
       <div className="pb-12 space-y-3">
         <PageBreadcrumb
@@ -224,8 +223,13 @@ export default function CheckoutPage() {
           ]}
         />
         <div className="wrapper">
-          <div className="flex items-center justify-center py-44 2xl:py-80">
+          <div className="flex flex-col items-center justify-center gap-2 py-44 2xl:py-80">
             <Spinner className="size-8 text-secondary" />
+            {isMerging ? (
+              <p className="text-sm text-muted-foreground">
+                Đang đồng bộ giỏ hàng...
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
