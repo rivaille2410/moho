@@ -1,15 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
+
 import Link from "next/link";
 import Image from "next/image";
 
 import { X, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
 
-import {
-  useCartStore,
-  useCartTotalPrice,
-  useCartTotalQuantity,
-} from "@/store/cart";
+import { useCartView } from "@/features/cart/hooks/use-cart-view";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,30 +17,44 @@ const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
 
 export default function CartPage() {
-  const items = useCartStore((state) => state.items);
-  const hasHydrated = useCartStore((state) => state.hasHydrated);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const clear = useCartStore((state) => state.clear);
+  const { items, hasHydrated, isMerging, updateQuantity, removeItem, clear } =
+    useCartView();
 
-  const totalQuantity = useCartTotalQuantity();
-  const totalPrice = useCartTotalPrice();
-
-  const totalSavings = items.reduce(
-    (sum, i) =>
-      sum + (i.compareAtPrice ? (i.compareAtPrice - i.price) * i.quantity : 0),
-    0,
+  const totalQuantity = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items],
+  );
+  const totalPrice = useMemo(
+    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [items],
+  );
+  const totalSavings = useMemo(
+    () =>
+      items.reduce(
+        (sum, i) =>
+          sum +
+          (i.compareAtPrice ? (i.compareAtPrice - i.price) * i.quantity : 0),
+        0,
+      ),
+    [items],
   );
 
-  if (!hasHydrated) {
+  const isLoading = !hasHydrated || isMerging;
+
+  if (isLoading) {
     return (
       <div className="pb-12 space-y-3">
         <PageBreadcrumb
           items={[{ label: "Trang chủ", href: "/" }, { label: "Giỏ hàng" }]}
         />
         <div className="wrapper">
-          <div className="flex items-center justify-center py-44 2xl:py-80">
+          <div className="flex flex-col items-center justify-center gap-2 py-44 2xl:py-80">
             <Spinner className="size-8 text-secondary" />
+            {isMerging ? (
+              <p className="text-sm text-muted-foreground">
+                Đang đồng bộ giỏ hàng...
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

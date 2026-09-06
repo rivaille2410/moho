@@ -1,15 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
+
 import Link from "next/link";
 import Image from "next/image";
 
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
-
-import {
-  useCartStore,
-  useCartTotalPrice,
-  useCartTotalQuantity,
-} from "@/store/cart";
 
 import {
   Popover,
@@ -19,20 +15,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
+import { useCartStore } from "@/store/cart";
+import { useCartView } from "@/features/cart/hooks/use-cart-view";
+
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
 
 export function CartPopover() {
-  const items = useCartStore((state) => state.items);
-  const hasHydrated = useCartStore((state) => state.hasHydrated);
+  const { items, hasHydrated, isMerging, updateQuantity, removeItem } =
+    useCartView();
+
   const isOpen = useCartStore((state) => state.isOpen);
   const open = useCartStore((state) => state.open);
   const close = useCartStore((state) => state.close);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const removeItem = useCartStore((state) => state.removeItem);
 
-  const totalQuantity = useCartTotalQuantity();
-  const totalPrice = useCartTotalPrice();
+  const totalQuantity = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items],
+  );
+  const totalPrice = useMemo(
+    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [items],
+  );
+
+  const isLoading = !hasHydrated || isMerging;
 
   return (
     <Popover open={isOpen} onOpenChange={(next) => (next ? open() : close())}>
@@ -41,7 +47,7 @@ export function CartPopover() {
           <Button size="lg" variant="ghost" className="relative">
             <div className="relative">
               <ShoppingBag className="size-5" />
-              {hasHydrated && totalQuantity > 0 && (
+              {!isLoading && totalQuantity > 0 && (
                 <span className="absolute -right-2 -top-2 size-4.5 flex items-center justify-center text-[12px] font-medium text-background bg-secondary rounded-full">
                   {totalQuantity}
                 </span>
@@ -53,11 +59,11 @@ export function CartPopover() {
       />
 
       <PopoverContent align="end" className="w-90 p-0">
-        {!hasHydrated ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Spinner className="size-6 text-secondary" />
             <p className="text-sm text-muted-foreground">
-              Đang tải giỏ hàng...
+              {isMerging ? "Đang đồng bộ giỏ hàng..." : "Đang tải giỏ hàng..."}
             </p>
           </div>
         ) : items.length === 0 ? (
