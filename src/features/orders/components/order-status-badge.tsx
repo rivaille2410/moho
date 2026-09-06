@@ -22,12 +22,12 @@ const statusConfig: Record<
   },
   CONFIRMED: {
     label: "Đã xác nhận",
-    className: "border-blue-500/20 bg-blue-500/10 text-blue-600",
+    className: "border-sky-500/20 bg-sky-500/10 text-sky-600",
     icon: CheckCircle2,
   },
   PROCESSING: {
     label: "Đang xử lý",
-    className: "border-violet-500/20 bg-violet-500/10 text-violet-600",
+    className: "border-sky-500/20 bg-sky-500/10 text-sky-600",
     icon: Loader2,
   },
   SHIPPED: {

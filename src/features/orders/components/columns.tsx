@@ -1,16 +1,17 @@
 "use client";
 
-import { createColumnHelper } from "@tanstack/react-table";
 import {
-  Copy,
   Eye,
-  MoreHorizontal,
-  RefreshCw,
-  Banknote,
+  Copy,
+  Wallet,
   QrCode,
+  Banknote,
+  RefreshCw,
+  MoreHorizontal,
 } from "lucide-react";
+import { createColumnHelper } from "@tanstack/react-table";
 
-import { type Order } from "@/types/order";
+import { type Order, type PaymentMethod } from "@/types/order";
 
 import {
   DropdownMenu,
@@ -58,18 +59,8 @@ function formatCurrency(value: string) {
   }).format(Number(value));
 }
 
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(-2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
-
 const paymentMethodConfig: Record<
-  Order["paymentMethod"],
+  PaymentMethod,
   { label: string; icon: React.ReactNode }
 > = {
   COD: { label: "COD", icon: <Banknote className="size-3" /> },
@@ -77,6 +68,9 @@ const paymentMethodConfig: Record<
     label: "Chuyển khoản",
     icon: <QrCode className="size-3" />,
   },
+  VNPAY: { label: "VNPay", icon: <Wallet className="size-3" /> },
+  MOMO: { label: "Momo", icon: <Wallet className="size-3" /> },
+  ZALOPAY: { label: "ZaloPay", icon: <Wallet className="size-3" /> },
 };
 
 export const getColumns = ({ onView, onUpdateStatus }: ColumnsOptions) =>
@@ -102,12 +96,12 @@ export const getColumns = ({ onView, onUpdateStatus }: ColumnsOptions) =>
         const { recipientName, recipientPhone, user } = row.original;
         return (
           <div className="flex items-center gap-2.5">
-            <Avatar className="size-8">
+            <Avatar className="size-9">
               {user.avatar && (
                 <AvatarImage src={user.avatar} alt={recipientName} />
               )}
-              <AvatarFallback className="text-xs">
-                {getInitials(recipientName)}
+              <AvatarFallback>
+                {recipientName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-0.5">
@@ -128,13 +122,14 @@ export const getColumns = ({ onView, onUpdateStatus }: ColumnsOptions) =>
       cell: ({ row }) => <OrderStatusBadge status={row.getValue("status")} />,
     }),
 
-    columnHelper.accessor("paymentMethod", {
+    columnHelper.accessor("payment", {
       header: "Thanh toán",
       cell: ({ row }) => {
-        const method =
-          paymentMethodConfig[
-            row.getValue<Order["paymentMethod"]>("paymentMethod")
-          ];
+        const payment = row.original.payment;
+        if (!payment) {
+          return <span className="text-xs text-muted-foreground">—</span>;
+        }
+        const method = paymentMethodConfig[payment.method];
         return (
           <Badge variant="outline" className="gap-1 font-normal">
             {method.icon}
