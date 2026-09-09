@@ -11,6 +11,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
+import { NotificationPopover } from "@/app/(client)/_components/notification-popover";
+
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   users: "Quản lý người dùng",
@@ -50,6 +52,10 @@ export function SiteHeader() {
           className="h-4 data-vertical:self-auto mx-2"
         />
         <PageBreadcrumb items={items} />
+
+        <div className="ml-auto flex items-center">
+          <NotificationPopover />
+        </div>
       </div>
     </header>
   );

@@ -19,9 +19,7 @@ import { authRequest } from "@/lib/auth-request";
 import { CartPopover } from "./cart-popover";
 import { SearchInput } from "./search-input";
 import { MobileNavSheet } from "./mobile-nav-sheet";
-
-import { AuthModal } from "@/features/auth/components/auth-modal";
-import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { NotificationPopover } from "./notification-popover";
 
 import {
   DropdownMenu,
@@ -35,9 +33,15 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { AuthModal } from "@/features/auth/components/auth-modal";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { useNotificationSocket } from "@/features/notifications/hooks/use-notification-socket";
+
 export const Header = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  useNotificationSocket();
 
   const { data: user, isLoading } = useCurrentUser();
 
@@ -64,6 +68,7 @@ export const Header = () => {
 
         <div className="flex items-center">
           {!(user?.role === "ADMIN") && <CartPopover />}
+          {user && <NotificationPopover />}
 
           {isLoading ? (
             <Spinner className="size-5 text-secondary" />

@@ -53,12 +53,12 @@ export function CartPopover() {
                 </span>
               )}
             </div>
-            <p>Giỏ hàng</p>
+            <p className="hidden sm:block">Giỏ hàng</p>
           </Button>
         }
       />
 
-      <PopoverContent align="end" className="w-90 p-0">
+      <PopoverContent align="end" className="md:min-w-sm p-0">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Spinner className="size-6 text-secondary" />
