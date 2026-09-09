@@ -2,9 +2,12 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Inter } from "next/font/google";
 
+import NextTopLoader from "nextjs-toploader";
+
 import { cn } from "@/lib/utils";
 
 import { Toaster } from "@/components/ui/toast";
+import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CartSyncProvider } from "@/components/providers/cart-sync-provider";
 
@@ -38,6 +41,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <QueryProvider>
           <CartSyncProvider>
             <Toaster />
+            <ScrollProgress />
+            <NextTopLoader
+              crawl
+              height={3}
+              speed={200}
+              easing="ease"
+              crawlSpeed={200}
+              showSpinner={false}
+              initialPosition={0.08}
+              color="var(--secondary)"
+            />
             {children}
           </CartSyncProvider>
         </QueryProvider>
