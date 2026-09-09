@@ -39,7 +39,7 @@ export type OrderUser = {
   avatar?: string;
 };
 
-export interface OrderItem {
+export type OrderItem = {
   id: string;
   productId: string;
   variantId: string;
@@ -49,7 +49,11 @@ export interface OrderItem {
   price: number;
   quantity: number;
   isReviewed: boolean;
-}
+  variant: {
+    colorHex: string | null;
+    colorName: string | null;
+  };
+};
 
 export type Order = {
   id: string;
