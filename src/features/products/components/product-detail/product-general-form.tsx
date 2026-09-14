@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Plus, Trash2, DollarSign, Percent, Ruler } from "lucide-react";
+import { Plus, Trash2, Percent, Ruler } from "lucide-react";
 
 import {
   generalInfoSchema,
@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 import {
@@ -138,7 +139,7 @@ export function ProductGeneralForm({ product }: Props) {
 
           <Field>
             <FieldLabel>Mã SKU</FieldLabel>
-            <Input placeholder="Mã SKU" {...form.register("sku")} />
+            <Input placeholder="Mã SKU" disabled {...form.register("sku")} />
             {form.formState.errors.sku && (
               <FieldError>{form.formState.errors.sku.message}</FieldError>
             )}
@@ -148,11 +149,11 @@ export function ProductGeneralForm({ product }: Props) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field>
             <FieldLabel>Giá bán</FieldLabel>
-            <Input
-              type="number"
-              startIcon={<DollarSign />}
-              placeholder="0"
-              {...form.register("price", { valueAsNumber: true })}
+            <CurrencyInput
+              value={form.watch("price")}
+              onChange={(value) =>
+                form.setValue("price", value ?? 0, { shouldValidate: true })
+              }
             />
             {form.formState.errors.price && (
               <FieldError>{form.formState.errors.price.message}</FieldError>
@@ -177,7 +178,7 @@ export function ProductGeneralForm({ product }: Props) {
               compareAtPrice !== undefined && (
                 <FieldDescription>
                   Giá gạch ngang sẽ hiển thị:{" "}
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-secondary">
                     {formatPrice(compareAtPrice)}
                   </span>
                 </FieldDescription>

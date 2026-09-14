@@ -9,9 +9,13 @@ import {
   StarIcon,
   UsersIcon,
   TicketIcon,
+  TruckIcon,
   PackageIcon,
   ReceiptIcon,
+  WarehouseIcon,
   FileTextIcon,
+  ClipboardListIcon,
+  ArrowLeftRightIcon,
   LayoutDashboardIcon,
 } from "lucide-react";
 
@@ -83,6 +87,31 @@ const data = {
           title: "Quản lý người dùng",
           url: "/dashboard/users",
           icon: <UsersIcon />,
+        },
+      ],
+    },
+    {
+      label: "Kho hàng",
+      items: [
+        {
+          title: "Đơn nhập hàng",
+          url: "/dashboard/purchase-orders",
+          icon: <ClipboardListIcon />,
+        },
+        {
+          title: "Lịch sử tồn kho",
+          url: "/dashboard/stock-movements",
+          icon: <ArrowLeftRightIcon />,
+        },
+        {
+          title: "Nhà cung cấp",
+          url: "/dashboard/suppliers",
+          icon: <TruckIcon />,
+        },
+        {
+          title: "Kho hàng",
+          url: "/dashboard/warehouses",
+          icon: <WarehouseIcon />,
         },
       ],
     },
