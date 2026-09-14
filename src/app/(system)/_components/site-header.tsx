@@ -22,6 +22,10 @@ const ROUTE_LABELS: Record<string, string> = {
   reviews: "Quản lý đánh giá",
   posts: "Quản lý bài viết",
   vouchers: "Quản lý voucher",
+  "purchase-orders": "Đơn nhập hàng",
+  "stock-movements": "Lịch sử tồn kho",
+  suppliers: "Nhà cung cấp",
+  warehouses: "Kho hàng",
 };
 
 function buildBreadcrumbItems(
