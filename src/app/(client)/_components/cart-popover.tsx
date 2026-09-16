@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCartStore } from "@/store/cart";
 import { useCartView } from "@/features/cart/hooks/use-cart-view";
@@ -111,45 +112,57 @@ export function CartPopover() {
                     ) : null}
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center rounded-md border">
-                        <button
-                          type="button"
-                          className="p-2 disabled:opacity-40"
-                          disabled={item.quantity <= 1}
-                          onClick={() =>
-                            updateQuantity(item.variantId, item.quantity - 1)
-                          }
-                        >
-                          <Minus className="size-3" />
-                        </button>
-                        <span className="w-7 border-x py-1 text-center text-xs">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          className="p-2 disabled:opacity-40"
-                          disabled={item.quantity >= item.maxStock}
-                          onClick={() =>
-                            updateQuantity(item.variantId, item.quantity + 1)
-                          }
-                        >
-                          <Plus className="size-3" />
-                        </button>
-                      </div>
+                      {item.isPending ? (
+                        <Skeleton className="h-7 w-24 rounded-md" />
+                      ) : (
+                        <div className="flex items-center rounded-md border">
+                          <button
+                            type="button"
+                            className="p-2 disabled:opacity-40"
+                            disabled={item.quantity <= 1}
+                            onClick={() =>
+                              updateQuantity(item.variantId, item.quantity - 1)
+                            }
+                          >
+                            <Minus className="size-3" />
+                          </button>
+                          <span className="w-7 border-x py-1 text-center text-xs">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            className="p-2 disabled:opacity-40"
+                            disabled={item.quantity >= item.maxStock}
+                            onClick={() =>
+                              updateQuantity(item.variantId, item.quantity + 1)
+                            }
+                          >
+                            <Plus className="size-3" />
+                          </button>
+                        </div>
+                      )}
 
-                      <span className="text-sm font-semibold text-secondary">
-                        {formatVND(item.price * item.quantity)}
-                      </span>
+                      {item.isPending ? (
+                        <Skeleton className="h-4 w-14 rounded" />
+                      ) : (
+                        <span className="text-sm font-semibold text-secondary">
+                          {formatVND(item.price * item.quantity)}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.variantId)}
-                    className="self-start text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="size-4" />
-                  </button>
+                  {item.isPending ? (
+                    <Skeleton className="size-4 shrink-0 self-start rounded" />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.variantId)}
+                      className="self-start text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

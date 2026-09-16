@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { User, ShieldCheck, Mail, Lock, Camera } from "lucide-react";
+import { User, ShieldCheck, Mail, Lock, Camera, MapPin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -18,8 +18,9 @@ import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useUpdateAvatar } from "@/features/users/hooks/use-update-avatar";
 import { useUpdateProfile } from "@/features/users/hooks/use-update-profile";
 import { useChangePassword } from "@/features/users/hooks/use-change-password";
+import { AddressBookSection } from "@/features/addresses/components/address-book-section";
 
-type ProfileSection = "info" | "security";
+type ProfileSection = "info" | "addresses" | "security";
 
 const NAV_ITEMS: {
   key: ProfileSection;
@@ -32,6 +33,11 @@ const NAV_ITEMS: {
     icon: <User className="size-4" />,
   },
   {
+    key: "addresses",
+    label: "Sổ địa chỉ",
+    icon: <MapPin className="size-4" />,
+  },
+  {
     key: "security",
     label: "Bảo mật",
     icon: <ShieldCheck className="size-4" />,
@@ -40,6 +46,17 @@ const NAV_ITEMS: {
 
 const ProfilePage = () => {
   const [section, setSection] = useState<ProfileSection>("info");
+
+  const { data: user } = useCurrentUser();
+  const isAdmin = user?.role === "ADMIN";
+
+  const navItems = isAdmin
+    ? NAV_ITEMS.filter((item) => item.key !== "addresses")
+    : NAV_ITEMS;
+
+  useEffect(() => {
+    if (isAdmin && section === "addresses") setSection("info");
+  }, [isAdmin, section]);
 
   return (
     <section className="w-full space-y-3 pb-12">
@@ -51,13 +68,13 @@ const ProfilePage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">Hồ sơ của bạn</h1>
           <p className="text-sm text-muted-foreground">
-            Quản lý thông tin cá nhân và bảo mật tài khoản
+            Quản lý thông tin cá nhân, địa chỉ giao hàng và bảo mật tài khoản
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8">
           <aside className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => setSection(item.key)}
@@ -76,6 +93,7 @@ const ProfilePage = () => {
 
           <div className="min-w-0">
             {section === "info" && <ProfileInfoSection />}
+            {section === "addresses" && <AddressBookSection />}
             {section === "security" && <ProfileSecuritySection />}
           </div>
         </div>

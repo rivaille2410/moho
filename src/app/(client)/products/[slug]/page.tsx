@@ -9,7 +9,6 @@ import Autoplay from "embla-carousel-autoplay";
 import { Minus, Plus, CheckCircle2, ChevronDown, ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useCartStore } from "@/store/cart";
 import type { ProductVariant } from "@/types/product";
 import { ProductGrid } from "../../(home)/_components/product-grid";
 
@@ -23,6 +22,7 @@ import type { CarouselApi } from "@/components/ui/carousel";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useCartView } from "@/features/cart/hooks/use-cart-view";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { usePublicProduct } from "@/features/products/hooks/use-public-product";
 import { useRelatedProducts } from "@/features/products/hooks/use-related-products";
@@ -41,7 +41,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { slug } = use(params);
   const router = useRouter();
   const { data: product, isLoading, isError } = usePublicProduct(slug);
-  const addItem = useCartStore((state) => state.addItem);
+  const { addItem } = useCartView();
 
   const { data: currentUser } = useCurrentUser();
   const isAdmin = currentUser?.role === "ADMIN";

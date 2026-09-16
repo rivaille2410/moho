@@ -69,6 +69,7 @@ export type Order = {
   recipientName: string;
   recipientPhone: string;
   shippingAddress: string;
+  addressId: string | null;
   note: string | null;
   cancelReason: string | null;
   items: OrderItem[];
@@ -86,6 +87,7 @@ export type CreateOrderInput = {
   recipientName: string;
   recipientPhone: string;
   shippingAddress: string;
+  addressId?: string;
   note?: string;
   voucherCode?: string;
   paymentMethod?: PaymentMethod;

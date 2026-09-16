@@ -39,8 +39,8 @@ import {
 } from "@/schemas/supplier";
 import { type CreateSupplierInput } from "@/types/supplier";
 
-import { useProvinces } from "@/features/address/hooks/use-provinces";
-import { useProvinceWards } from "@/features/address/hooks/use-province-wards";
+import { useProvinces } from "@/features/addresses/hooks/use-provinces";
+import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useSupplier } from "@/features/suppliers/hooks/use-supplier";
 import { useCreateSupplier } from "@/features/suppliers/hooks/use-create-supplier";
 import { useUpdateSupplier } from "@/features/suppliers/hooks/use-update-supplier";

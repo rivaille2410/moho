@@ -31,8 +31,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-import { useProvinces } from "@/features/address/hooks/use-provinces";
-import { useProvinceWards } from "@/features/address/hooks/use-province-wards";
+import { useProvinces } from "@/features/addresses/hooks/use-provinces";
+import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useUpdateWarehouse } from "@/features/warehouses/hooks/use-update-warehouse";
 
 interface Props {

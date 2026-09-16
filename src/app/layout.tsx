@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Inter } from "next/font/google";
+import { Lexend } from "next/font/google";
 
 import NextTopLoader from "nextjs-toploader";
 
@@ -11,12 +11,9 @@ import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CartSyncProvider } from "@/components/providers/cart-sync-provider";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
-const beVietnamPro = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro",
+const lexend = Lexend({
   subsets: ["latin", "vietnamese"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-lexend",
 });
 
 export const metadata: Metadata = {
@@ -27,16 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="vi"
-      className={cn(
-        "h-full",
-        "antialiased",
-        beVietnamPro.variable,
-        "font-sans",
-        inter.variable,
-      )}
-    >
+    <html lang="vi" className={cn("h-full", "antialiased", lexend.variable)}>
       <body className="min-h-full flex flex-col font-sans">
         <QueryProvider>
           <CartSyncProvider>
