@@ -40,9 +40,9 @@ import {
 } from "@/schemas/warehouse";
 import { type Warehouse, type CreateWarehouseInput } from "@/types/warehouse";
 
-import { useProvinces } from "@/features/address/hooks/use-provinces";
+import { useProvinces } from "@/features/addresses/hooks/use-provinces";
 import { useWarehouse } from "@/features/warehouses/hooks/use-warehouse";
-import { useProvinceWards } from "@/features/address/hooks/use-province-wards";
+import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useCreateWarehouse } from "@/features/warehouses/hooks/use-create-warehouse";
 import { useUpdateWarehouse } from "@/features/warehouses/hooks/use-update-warehouse";
 

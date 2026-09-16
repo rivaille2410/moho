@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
+import { Address } from "@/types/address";
 import { useCheckoutInfoStore } from "@/store/checkout-info";
 import { useCartView } from "@/features/cart/hooks/use-cart-view";
 import { CreateOrderItemInput, PaymentMethod } from "@/types/order";
@@ -39,11 +40,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
-import { useProvinces } from "@/features/address/hooks/use-provinces";
+import { useProvinces } from "@/features/addresses/hooks/use-provinces";
+import { useAddresses } from "@/features/addresses/hooks/use-addresses";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useCreateOrder } from "@/features/orders/hooks/use-create-order";
-import { useProvinceWards } from "@/features/address/hooks/use-province-wards";
+import { toLocalDigits } from "@/features/addresses/utils/format-address";
+import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useValidateVoucher } from "@/features/vouchers/hooks/use-validate-voucher";
+import { CheckoutAddressPicker } from "@/features/addresses/components/checkout-address-picker";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
@@ -71,7 +75,15 @@ export default function CheckoutPage() {
   const checkoutInfoHydrated = useCheckoutInfoStore((s) => s.hasHydrated);
   const setCheckoutInfo = useCheckoutInfoStore((s) => s.setInfo);
 
+  const { data: addressData, isLoading: isLoadingAddresses } = useAddresses();
+  const addresses = addressData?.data ?? [];
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null,
+  );
+  const [addressPicked, setAddressPicked] = useState(false);
+
   const {
+    reset,
     register,
     handleSubmit,
     control,
@@ -100,8 +112,39 @@ export default function CheckoutPage() {
   } | null>(null);
   const validateVoucher = useValidateVoucher();
 
+  const applyAddress = (address: Address) => {
+    setSelectedAddressId(address.id);
+    setValue("fullName", address.recipientName, { shouldValidate: true });
+    setValue("phone", toLocalDigits(address.recipientPhone), {
+      shouldValidate: true,
+    });
+    setValue("provinceCode", address.provinceCode, { shouldValidate: true });
+    setValue("wardCode", address.wardCode, { shouldValidate: true });
+    setValue("addressDetail", address.addressDetail, { shouldValidate: true });
+  };
+
+  const handleUseManual = () => {
+    setSelectedAddressId(null);
+    reset({
+      fullName: me?.name ?? "",
+      phone: "",
+      provinceCode: undefined,
+      wardCode: undefined,
+      addressDetail: "",
+      note: watch("note"),
+    });
+  };
+
   useEffect(() => {
-    if (!checkoutInfoHydrated) return;
+    if (addressPicked || addresses.length === 0) return;
+    const def = addresses.find((a) => a.isDefault) ?? addresses[0];
+    applyAddress(def);
+    setAddressPicked(true);
+  }, [addresses, addressPicked]);
+
+  useEffect(() => {
+    if (!checkoutInfoHydrated || isLoadingAddresses) return;
+    if (addresses.length > 0) return;
 
     if (savedInfo) {
       setValue("fullName", savedInfo.fullName, { shouldValidate: false });
@@ -116,7 +159,13 @@ export default function CheckoutPage() {
     } else if (me?.name) {
       setValue("fullName", me.name, { shouldValidate: false });
     }
-  }, [checkoutInfoHydrated, savedInfo, me?.name]);
+  }, [
+    checkoutInfoHydrated,
+    isLoadingAddresses,
+    addresses.length,
+    savedInfo,
+    me?.name,
+  ]);
 
   const provinceCode = watch("provinceCode");
 
@@ -190,19 +239,22 @@ export default function CheckoutPage() {
         recipientName: data.fullName.trim(),
         recipientPhone: fullPhone,
         shippingAddress: fullAddress,
+        addressId: selectedAddressId ?? undefined,
         note: data.note?.trim() || undefined,
         paymentMethod,
         items: buildOrderItems(),
         voucherCode: appliedVoucher?.code,
       });
 
-      setCheckoutInfo({
-        fullName: data.fullName.trim(),
-        phone: data.phone,
-        provinceCode: data.provinceCode,
-        wardCode: data.wardCode,
-        addressDetail: data.addressDetail.trim(),
-      });
+      if (!selectedAddressId) {
+        setCheckoutInfo({
+          fullName: data.fullName.trim(),
+          phone: data.phone,
+          provinceCode: data.provinceCode,
+          wardCode: data.wardCode,
+          addressDetail: data.addressDetail.trim(),
+        });
+      }
 
       router.push(`/checkout/success?ref=${order.orderNumber}`);
     } catch (err) {
@@ -285,10 +337,17 @@ export default function CheckoutPage() {
           className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3"
         >
           <div className="space-y-4 lg:col-span-2">
+            <CheckoutAddressPicker
+              addresses={addresses}
+              selectedId={selectedAddressId}
+              onSelect={applyAddress}
+              onUseManual={handleUseManual}
+            />
+
             <div className="rounded-lg border p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Thông tin giao hàng</h2>
-                {savedInfo ? (
+                {savedInfo && addresses.length === 0 ? (
                   <button
                     type="button"
                     onClick={() => useCheckoutInfoStore.getState().clearInfo()}
@@ -298,6 +357,13 @@ export default function CheckoutPage() {
                   </button>
                 ) : null}
               </div>
+
+              {selectedAddressId ? (
+                <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                  Đang dùng địa chỉ đã lưu. Mọi chỉnh sửa bên dưới chỉ áp dụng
+                  cho đơn hàng này, sổ địa chỉ của bạn không thay đổi.
+                </p>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label htmlFor="fullName">
