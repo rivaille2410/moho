@@ -73,6 +73,8 @@ export type Order = {
   note: string | null;
   cancelReason: string | null;
   items: OrderItem[];
+  hasActiveReturnRequest: boolean;
+  hasCompletedReturn: boolean;
   createdAt: string;
   updatedAt: string;
 };

@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
@@ -65,7 +65,8 @@ function RequiredMark() {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, hasHydrated, isMerging, updateQuantity } = useCartView();
+  const { items, hasHydrated, isMerging, updateQuantity, clear } =
+    useCartView();
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const { data: me } = useCurrentUser();
@@ -256,6 +257,7 @@ export default function CheckoutPage() {
         });
       }
 
+      clear();
       router.push(`/checkout/success?ref=${order.orderNumber}`);
     } catch (err) {
       console.error(err);
@@ -275,14 +277,73 @@ export default function CheckoutPage() {
           ]}
         />
         <div className="wrapper">
-          <div className="flex flex-col items-center justify-center gap-2 py-44 2xl:py-80">
-            <Spinner className="size-8 text-secondary" />
-            {isMerging ? (
-              <p className="text-sm text-muted-foreground">
-                Đang đồng bộ giỏ hàng...
-              </p>
-            ) : null}
+          <Skeleton className="h-8 w-40" />
+
+          <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+            <div className="space-y-4 lg:col-span-2">
+              <div className="rounded-lg border p-4 space-y-3">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-16 w-full rounded-md" />
+              </div>
+
+              <div className="rounded-lg border p-4 space-y-4">
+                <Skeleton className="h-5 w-40" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-9 w-full" />
+                </div>
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-9 w-full" />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-9 w-full" />
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-4 space-y-3">
+                <Skeleton className="h-5 w-44" />
+                <Skeleton className="h-16 w-full rounded-lg" />
+                <Skeleton className="h-16 w-full rounded-lg" />
+              </div>
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <Skeleton className="h-5 w-32" />
+              {[1, 2].map((i) => (
+                <div key={i} className="flex gap-3">
+                  <Skeleton className="size-18 shrink-0 rounded-md" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-7 w-24 rounded-md" />
+                  </div>
+                </div>
+              ))}
+              <div className="h-px bg-border" />
+              <Skeleton className="h-9 w-full" />
+              <div className="h-px bg-border" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
+
+          {isMerging ? (
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Đang đồng bộ giỏ hàng...
+            </p>
+          ) : null}
         </div>
       </div>
     );
@@ -783,6 +844,11 @@ export default function CheckoutPage() {
                     <X className="size-4" />
                   </button>
                 </div>
+              ) : validateVoucher.isPending ? (
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
               ) : (
                 <div className="flex gap-2">
                   <Input
@@ -803,14 +869,10 @@ export default function CheckoutPage() {
                   <Button
                     size={"lg"}
                     type="button"
-                    disabled={!voucherInput.trim() || validateVoucher.isPending}
+                    disabled={!voucherInput.trim()}
                     onClick={handleApplyVoucher}
                   >
-                    {validateVoucher.isPending ? (
-                      <Spinner className="size-4" />
-                    ) : (
-                      "Áp dụng"
-                    )}
+                    Áp dụng
                   </Button>
                 </div>
               )}
@@ -854,21 +916,13 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-2">
-              <Button
-                type="submit"
-                size="xl"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Spinner className="size-4" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  "Đặt hàng"
-                )}
-              </Button>
+              {isSubmitting ? (
+                <Skeleton className="h-12 w-full" />
+              ) : (
+                <Button type="submit" size="xl" className="w-full">
+                  Đặt hàng
+                </Button>
+              )}
 
               <Link href="/cart" className="block">
                 <Button
