@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { type Order, type OrderStatus } from "@/types/order";
 import { useUpdateOrderStatus } from "@/features/orders/hooks/use-update-order-status";
-import { Spinner } from "@/components/ui/spinner";
 
 interface UpdateOrderStatusDialogProps {
   order: Order | null;

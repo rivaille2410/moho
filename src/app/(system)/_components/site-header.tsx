@@ -19,6 +19,7 @@ const ROUTE_LABELS: Record<string, string> = {
   products: "Quản lý sản phẩm",
   categories: "Quản lý danh mục",
   orders: "Quản lý đơn hàng",
+  "return-requests": "Yêu cầu đổi trả",
   reviews: "Quản lý đánh giá",
   posts: "Quản lý bài viết",
   vouchers: "Quản lý voucher",

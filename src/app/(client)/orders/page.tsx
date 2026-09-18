@@ -4,23 +4,28 @@ import Link from "next/link";
 import Image from "next/image";
 import * as React from "react";
 
-import { PackageOpen, Star } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { type Order, type OrderStatus } from "@/types/order";
-import { useMyOrders } from "@/features/orders/hooks/use-my-orders";
-import { useProductSlugs } from "@/features/products/hooks/use-product-slugs";
+import { PackageOpen, Star, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
+import { cn } from "@/lib/utils";
+import { type Order, type OrderStatus } from "@/types/order";
+import { useMyOrders } from "@/features/orders/hooks/use-my-orders";
+import { useProductSlugs } from "@/features/products/hooks/use-product-slugs";
+import { useMyReturnRequests } from "@/features/return-requests/hooks/use-my-return-requests";
+
 import { ViewOrderDialog } from "@/features/orders/components/view-order-dialog";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { reasonLabel } from "@/features/return-requests/utils/return-request-status";
 import { WriteReviewDialog } from "@/features/reviews/components/write-review-dialog";
+import { ViewReturnRequestDialog } from "@/features/return-requests/components/view-return-request-dialog";
+import { ReturnRequestStatusBadge } from "@/features/return-requests/components/return-request-status-badge";
+import { CreateReturnRequestDialog } from "@/features/return-requests/components/create-return-request-dialog";
 
-type StatusFilter = "ALL" | OrderStatus;
+type StatusFilter = "ALL" | OrderStatus | "RETURNS";
 
 type ReviewTarget = {
   slug: string;
@@ -36,6 +41,7 @@ const STATUS_TABS: { label: string; value: StatusFilter }[] = [
   { label: "Đang giao", value: "SHIPPED" },
   { label: "Đã giao", value: "DELIVERED" },
   { label: "Đã huỷ", value: "CANCELLED" },
+  { label: "Trả hàng/Hoàn tiền", value: "RETURNS" },
 ];
 
 function formatCurrency(value: string) {
@@ -60,12 +66,25 @@ const OrdersPage = () => {
   const [reviewTarget, setReviewTarget] = React.useState<ReviewTarget | null>(
     null,
   );
+  const [orderToReturn, setOrderToReturn] = React.useState<Order | null>(null);
+  const [returnRequestToView, setReturnRequestToView] = React.useState<
+    string | null
+  >(null);
+
+  const isReturnsTab = statusFilter === "RETURNS";
 
   const { data, isLoading } = useMyOrders({
     page,
     limit: 10,
-    status: statusFilter === "ALL" ? undefined : statusFilter,
+    status: isReturnsTab || statusFilter === "ALL" ? undefined : statusFilter,
   });
+
+  const { data: returnData, isLoading: isReturnsLoading } = useMyReturnRequests(
+    {
+      page,
+      limit: 10,
+    },
+  );
 
   const productIds = React.useMemo(
     () =>
@@ -116,7 +135,57 @@ const OrdersPage = () => {
           ))}
         </div>
 
-        {isLoading ? (
+        {isReturnsTab ? (
+          isReturnsLoading ? (
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : !returnData?.data.length ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
+              <RotateCcw
+                className="size-16 text-muted-foreground/40"
+                strokeWidth={1.5}
+              />
+              <p className="text-sm text-muted-foreground">
+                Bạn chưa có yêu cầu trả hàng/hoàn tiền nào
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {returnData.data.map((item) => (
+                <div
+                  key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setReturnRequestToView(item.id)}
+                  className="flex cursor-pointer flex-col gap-2 rounded-lg border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{item.code}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · Đơn {item.orderNumber}
+                      </span>
+                    </div>
+                    <ReturnRequestStatusBadge status={item.status} />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {reasonLabel[item.reason] ?? item.reason} ·{" "}
+                      {formatDate(item.createdAt)}
+                    </span>
+                    <span className="font-semibold text-secondary">
+                      {formatCurrency(item.refundAmount)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : isLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-40 w-full rounded-lg" />
@@ -213,6 +282,33 @@ const OrdersPage = () => {
                           </Link>
                         )}
 
+                        {order.status === "DELIVERED" && (
+                          <>
+                            {order.hasCompletedReturn ? (
+                              <Button variant="outline" disabled>
+                                <RotateCcw className="size-4" />
+                                Đã hoàn trả
+                              </Button>
+                            ) : order.hasActiveReturnRequest ? (
+                              <Button variant="outline" disabled>
+                                <RotateCcw className="size-4" />
+                                Đang xử lý trả hàng
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOrderToReturn(order);
+                                }}
+                              >
+                                <RotateCcw className="size-4" />
+                                Yêu cầu trả hàng
+                              </Button>
+                            )}
+                          </>
+                        )}
+
                         {canReview && (
                           <Button
                             variant="secondary"
@@ -297,6 +393,16 @@ const OrdersPage = () => {
         <WriteReviewDialog
           target={reviewTarget}
           onOpenChange={(open) => !open && setReviewTarget(null)}
+        />
+
+        <CreateReturnRequestDialog
+          order={orderToReturn}
+          onOpenChange={(open) => !open && setOrderToReturn(null)}
+        />
+
+        <ViewReturnRequestDialog
+          returnRequestId={returnRequestToView}
+          onOpenChange={(open) => !open && setReturnRequestToView(null)}
         />
       </div>
     </section>

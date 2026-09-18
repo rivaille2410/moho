@@ -10,7 +10,7 @@ import { X, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
 import { useCartView } from "@/features/cart/hooks/use-cart-view";
 
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 const formatVND = (value: number) =>
@@ -48,14 +48,54 @@ export default function CartPage() {
           items={[{ label: "Trang chủ", href: "/" }, { label: "Giỏ hàng" }]}
         />
         <div className="wrapper">
-          <div className="flex flex-col items-center justify-center gap-2 py-44 2xl:py-80">
-            <Spinner className="size-8 text-secondary" />
-            {isMerging ? (
-              <p className="text-sm text-muted-foreground">
-                Đang đồng bộ giỏ hàng...
-              </p>
-            ) : null}
+          <Skeleton className="h-8 w-48" />
+
+          <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+            <div className="rounded-lg border lg:col-span-2">
+              <div className="flex items-center justify-between border-b p-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+
+              <div className="divide-y">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-4 p-4">
+                    <Skeleton className="size-24 shrink-0 rounded-md" />
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-8 w-24 rounded-md" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    </div>
+                    <Skeleton className="size-4 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <Skeleton className="h-5 w-36" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+              <div className="h-px bg-border" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
+
+          {isMerging ? (
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Đang đồng bộ giỏ hàng...
+            </p>
+          ) : null}
         </div>
       </div>
     );

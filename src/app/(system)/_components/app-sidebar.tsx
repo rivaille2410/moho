@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   TagsIcon,
   StarIcon,
+  Undo2Icon,
   UsersIcon,
   TruckIcon,
   TicketIcon,
@@ -14,7 +15,6 @@ import {
   ReceiptIcon,
   FileTextIcon,
   WarehouseIcon,
-  MapPinnedIcon,
   ClipboardListIcon,
   ArrowLeftRightIcon,
   LayoutDashboardIcon,
@@ -88,6 +88,11 @@ const data = {
           title: "Quản lý đơn hàng",
           url: "/dashboard/orders",
           icon: <ReceiptIcon />,
+        },
+        {
+          title: "Yêu cầu đổi trả",
+          url: "/dashboard/return-requests",
+          icon: <Undo2Icon />,
         },
         {
           title: "Quản lý voucher",
