@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   TagsIcon,
   StarIcon,
+  SendIcon,
   Undo2Icon,
   UsersIcon,
   TruckIcon,
@@ -88,6 +89,11 @@ const data = {
           title: "Quản lý đơn hàng",
           url: "/dashboard/orders",
           icon: <ReceiptIcon />,
+        },
+        {
+          title: "Quản lý vận đơn",
+          url: "/dashboard/shipments",
+          icon: <SendIcon />,
         },
         {
           title: "Yêu cầu đổi trả",

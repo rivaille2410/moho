@@ -3,16 +3,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { type ReturnRequest } from "@/types/return-request";
 import { reasonLabel } from "@/features/return-requests/utils/return-request-status";
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(-2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
-
 function formatPrice(value: string | number) {
   return Number(value).toLocaleString("vi-VN") + "đ";
 }
@@ -33,7 +23,7 @@ export function ReturnRequestCustomerSection({ returnRequest }: Props) {
               alt={returnRequest.customerName}
             />
             <AvatarFallback>
-              {getInitials(returnRequest.customerName)}
+              {returnRequest.customerName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col">
