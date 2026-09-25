@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import Link from "next/link";
+
 import {
   Dialog,
   DialogTitle,
@@ -39,6 +41,15 @@ const statusItems: { label: string; value: OrderStatus }[] = [
   { label: "Đã huỷ", value: "CANCELLED" },
 ];
 
+const MANUAL_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: [],
+  SHIPPED: [],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
 export function UpdateOrderStatusDialog({
   order,
   onOpenChange,
@@ -56,6 +67,13 @@ export function UpdateOrderStatusDialog({
       setCancelReason("");
     }
   }, [order]);
+
+  const nextStatuses = order ? MANUAL_TRANSITIONS[order.status] : [];
+  const selectableItems = statusItems.filter(
+    (item) => item.value === order?.status || nextStatuses.includes(item.value),
+  );
+  const drivenByShipments =
+    !!order && nextStatuses.length === 0 && order.status !== "CANCELLED";
 
   const handleSubmit = () => {
     if (!order) return;
@@ -79,25 +97,39 @@ export function UpdateOrderStatusDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Trạng thái</Label>
-            <Select
-              items={statusItems}
-              value={status}
-              onValueChange={(value) => setStatus(value as OrderStatus)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Chọn trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusItems.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {drivenByShipments ? (
+            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+              Trạng thái giao hàng của đơn được cập nhật thông qua vận đơn. Hãy
+              tạo hoặc cập nhật vận đơn tại{" "}
+              <Link
+                href="/dashboard/shipments"
+                className="text-secondary hover:underline"
+              >
+                trang Vận đơn
+              </Link>
+              .
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Label>Trạng thái</Label>
+              <Select
+                items={statusItems}
+                value={status}
+                onValueChange={(value) => setStatus(value as OrderStatus)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectableItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {status === "CANCELLED" && (
             <div className="flex flex-col gap-2">
@@ -119,6 +151,7 @@ export function UpdateOrderStatusDialog({
             onClick={handleSubmit}
             disabled={
               updateStatus.isPending ||
+              drivenByShipments ||
               status === order?.status ||
               (status === "CANCELLED" && !cancelReason.trim())
             }
