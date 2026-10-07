@@ -66,14 +66,9 @@ export const getColumns = ({ onView, onChangeStatus }: ColumnsOptions) =>
         return (
           <Link
             href={`/dashboard/shipments/${shipment.id}`}
-            className="flex flex-col group/shipment-link"
+            className="font-medium hover:text-secondary transition"
           >
-            <span className="font-medium group-hover/shipment-link:text-secondary transition">
-              {shipment.code}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {shipment.trackingCode ?? "Chưa có mã vận đơn hãng"}
-            </span>
+            {shipment.code}
           </Link>
         );
       },

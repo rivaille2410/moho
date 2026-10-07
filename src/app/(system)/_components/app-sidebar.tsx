@@ -38,18 +38,13 @@ import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 const data = {
   navMain: [
     {
-      label: "Tổng quan",
+      label: "Hệ thống",
       items: [
         {
           title: "Dashboard",
           url: "/dashboard",
           icon: <LayoutDashboardIcon />,
         },
-      ],
-    },
-    {
-      label: "Tài khoản",
-      items: [
         {
           title: "Quản lý người dùng",
           url: "/dashboard/users",
@@ -66,14 +61,19 @@ const data = {
           icon: <TagsIcon />,
         },
         {
-          title: "Quản lý sản phẩm",
-          url: "/dashboard/products",
-          icon: <PackageIcon />,
-        },
-        {
           title: "Quản lý bài viết",
           url: "/dashboard/posts",
           icon: <FileTextIcon />,
+        },
+      ],
+    },
+    {
+      label: "Sản phẩm",
+      items: [
+        {
+          title: "Quản lý sản phẩm",
+          url: "/dashboard/products",
+          icon: <PackageIcon />,
         },
         {
           title: "Quản lý đánh giá",

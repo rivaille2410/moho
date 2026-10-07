@@ -1,60 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
-import { Menu } from "lucide-react";
+import {
+  Info,
+  Menu,
+  Store,
+  Newspaper,
+  LayoutGrid,
+  ChevronDown,
+  BadgePercent,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react";
 
 import {
   Sheet,
-  SheetTitle,
   SheetHeader,
   SheetContent,
   SheetTrigger,
+  SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const productCategories = [
-  { label: "Bộ Sưu Tập", href: "/bo-suu-tap" },
-  {
-    label: "Phòng Ngủ",
-    children: [
-      { label: "Giường ngủ", href: "/phong-ngu/giuong" },
-      { label: "Tủ quần áo", href: "/phong-ngu/tu-quan-ao" },
-      { label: "Bàn trang điểm", href: "/phong-ngu/ban-trang-diem" },
-    ],
-  },
-  {
-    label: "Phòng Khách",
-    children: [
-      { label: "Sofa", href: "/phong-khach/sofa" },
-      { label: "Bàn trà", href: "/phong-khach/ban-tra" },
-      { label: "Kệ tivi", href: "/phong-khach/ke-tivi" },
-    ],
-  },
-  {
-    label: "Phòng Ăn",
-    children: [
-      { label: "Bàn ăn", href: "/phong-an/ban-an" },
-      { label: "Ghế ăn", href: "/phong-an/ghe-an" },
-    ],
-  },
-  {
-    label: "Phòng Làm Việc",
-    children: [
-      { label: "Bàn làm việc", href: "/phong-lam-viec/ban" },
-      { label: "Ghế văn phòng", href: "/phong-lam-viec/ghe" },
-    ],
-  },
-  { label: "Tủ Bếp", href: "/tu-bep" },
-  { label: "Nệm", href: "/nem" },
-];
+import { cn } from "@/lib/utils";
+import {
+  useCategoryMenu,
+  type CategoryMenuItem,
+} from "@/features/categories/hooks/use-category-menu";
 
 const promoLinks = [
   { label: "Đang diễn ra", href: "/khuyen-mai/dang-dien-ra" },
@@ -66,8 +43,206 @@ const newsLinks = [
   { label: "Xu hướng thiết kế", href: "/tin-tuc/xu-huong" },
 ];
 
+function Collapse({
+  open,
+  children,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid transition-[grid-template-rows] duration-300 ease-out",
+        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+      )}
+    >
+      <div
+        aria-hidden={!open}
+        className={cn(
+          "overflow-hidden transition-[visibility] duration-300",
+          !open && "invisible",
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+      <Icon className="size-4.5" />
+    </span>
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  icon,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  onNavigate: () => void;
+}) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted/60 active:bg-muted",
+        isActive && "bg-secondary/10 text-secondary",
+      )}
+    >
+      <IconBadge icon={icon} />
+      <span className="flex-1">{label}</span>
+      <ChevronRight className="size-4 text-muted-foreground" />
+    </Link>
+  );
+}
+
+function NavSection({
+  label,
+  icon,
+  children,
+  defaultOpen = false,
+}: {
+  label: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-muted/60 active:bg-muted"
+      >
+        <IconBadge icon={icon} />
+        <span className="flex-1">{label}</span>
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-300",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      <Collapse open={open}>
+        <div className="ml-7 border-l pb-2 pl-3 pt-1">{children}</div>
+      </Collapse>
+    </div>
+  );
+}
+
+function SubLink({
+  href,
+  label,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className="block rounded-lg py-2.5 pl-3 pr-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+    >
+      {label}
+    </Link>
+  );
+}
+
+function CategoryNode({
+  item,
+  depth = 0,
+  onNavigate,
+}: {
+  item: CategoryMenuItem;
+  depth?: number;
+  onNavigate: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasChildren = item.children.length > 0;
+
+  return (
+    <div>
+      <div className="flex items-center rounded-lg transition-colors hover:bg-muted/60">
+        <Link
+          href={item.href}
+          onClick={onNavigate}
+          className={cn(
+            "flex-1 py-2.5 pl-3 pr-2 text-sm",
+            depth === 0 ? "font-medium" : "text-muted-foreground",
+          )}
+        >
+          {item.name}
+        </Link>
+
+        {hasChildren && (
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-label={`${open ? "Thu gọn" : "Mở rộng"} ${item.name}`}
+            onClick={() => setOpen((o) => !o)}
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground"
+          >
+            <ChevronDown
+              className={cn(
+                "size-4 transition-transform duration-300",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        )}
+      </div>
+
+      {hasChildren && (
+        <Collapse open={open}>
+          <div className="ml-3 border-l pl-1">
+            {item.children.map((child) => (
+              <CategoryNode
+                key={child.id}
+                item={child}
+                depth={depth + 1}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
+        </Collapse>
+      )}
+    </div>
+  );
+}
+
+function CategorySkeleton() {
+  return (
+    <div className="space-y-2 py-1 pl-3" aria-hidden>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-5 w-3/4 rounded-md" />
+      ))}
+    </div>
+  );
+}
+
 export const MobileNavSheet = () => {
   const [open, setOpen] = useState(false);
+  const { items: categories, isLoading } = useCategoryMenu();
+
+  const close = () => setOpen(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -78,107 +253,74 @@ export const MobileNavSheet = () => {
           </Button>
         }
       />
-      <SheetContent side="left" className="w-72">
-        <SheetHeader>
-          <SheetTitle>Danh mục</SheetTitle>
+      <SheetContent
+        side="left"
+        className="flex w-[85%] max-w-sm flex-col gap-0 p-0"
+      >
+        <SheetHeader className="border-b bg-secondary/5 px-5 py-5 gap-3">
+          <Link href={"/"}>
+            <Image src={"/logo.png"} alt="Logo" width={140} height={140} />
+          </Link>
+          <SheetDescription className="text-sm">
+            Khám phá danh mục sản phẩm
+          </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-1 px-4">
-          <Accordion className="w-full">
-            <AccordionItem value="san-pham">
-              <AccordionTrigger className="text-sm font-medium">
-                Sản phẩm
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col gap-3 ps-2">
-                  {productCategories.map((category) =>
-                    category.children ? (
-                      <div key={category.label} className="flex flex-col gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {category.label}
-                        </span>
-                        <div className="flex flex-col gap-2 ps-3">
-                          {category.children.map((child) => (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              onClick={() => setOpen(false)}
-                              className="text-sm"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <Link
-                        key={category.href}
-                        href={category.href!}
-                        onClick={() => setOpen(false)}
-                        className="text-sm font-medium"
-                      >
-                        {category.label}
-                      </Link>
-                    ),
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
 
-            <AccordionItem value="khuyen-mai">
-              <AccordionTrigger className="text-sm font-medium">
-                Khuyến mãi
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col gap-2 ps-2">
-                  {promoLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="text-sm"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="flex flex-col gap-0.5">
+            <NavSection defaultOpen icon={LayoutGrid} label="Sản phẩm">
+              {isLoading ? (
+                <CategorySkeleton />
+              ) : (
+                categories.map((category) => (
+                  <CategoryNode
+                    key={category.id}
+                    item={category}
+                    onNavigate={close}
+                  />
+                ))
+              )}
+            </NavSection>
 
-            <AccordionItem value="tin-tuc">
-              <AccordionTrigger className="text-sm font-medium">
-                Tin tức
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col gap-2 ps-2">
-                  {newsLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="text-sm"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+            <NavSection icon={BadgePercent} label="Khuyến mãi">
+              {promoLinks.map((item) => (
+                <SubLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  onNavigate={close}
+                />
+              ))}
+            </NavSection>
 
-          <Link
-            href="/ve-moho"
-            onClick={() => setOpen(false)}
-            className="border-t py-3 text-sm font-medium"
-          >
-            Về MOHO
-          </Link>
-          <Link
-            href="/cua-hang"
-            onClick={() => setOpen(false)}
-            className="border-t py-3 text-sm font-medium"
-          >
-            Cửa hàng
-          </Link>
+            <NavSection icon={Newspaper} label="Tin tức">
+              {newsLinks.map((item) => (
+                <SubLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  onNavigate={close}
+                />
+              ))}
+            </NavSection>
+          </div>
+
+          <div className="my-3 border-t" />
+
+          <div className="flex flex-col gap-0.5">
+            <NavLink
+              icon={Info}
+              href="/ve-moho"
+              label="Về MOHO"
+              onNavigate={close}
+            />
+            <NavLink
+              icon={Store}
+              label="Cửa hàng"
+              href="/cua-hang"
+              onNavigate={close}
+            />
+          </div>
         </div>
       </SheetContent>
     </Sheet>

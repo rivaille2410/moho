@@ -1,7 +1,10 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
+
 import { PostGrid } from "./post-grid";
 
+import { useGridColumns } from "@/hooks/use-grid-columns";
 import {
   usePublicPostsInfinite,
   type QueryPublicPostsParams,
@@ -13,11 +16,22 @@ interface PostListProps {
   params?: Omit<QueryPublicPostsParams, "page">;
 }
 
+const DEFAULT_LIMIT = 18;
+
 export default function PostList({
   title = "Bài viết",
   seeMoreHref,
-  params = { limit: 12 },
+  params,
 }: PostListProps) {
+  const columns = useGridColumns();
+
+  // Mỗi lần tải = bội số của số cột (làm tròn lên) để luôn đủ hàng
+  const queryParams = useMemo(() => {
+    const cols = Math.max(1, columns);
+    const target = params?.limit ?? DEFAULT_LIMIT;
+    return { ...params, limit: cols * Math.ceil(target / cols) };
+  }, [params, columns]);
+
   const {
     data,
     isLoading,
@@ -25,11 +39,18 @@ export default function PostList({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePublicPostsInfinite(params);
+  } = usePublicPostsInfinite(queryParams);
+
+  const handleLoadMore = useCallback(() => {
+    fetchNextPage();
+  }, [fetchNextPage]);
+
+  const posts = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
 
   if (isError) return null;
-
-  const posts = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <div className="wrapper pb-12">
@@ -39,7 +60,7 @@ export default function PostList({
         isLoading={isLoading}
         hasMore={hasNextPage}
         seeMoreHref={seeMoreHref}
-        onLoadMore={() => fetchNextPage()}
+        onLoadMore={handleLoadMore}
         isLoadingMore={isFetchingNextPage}
       />
     </div>

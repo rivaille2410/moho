@@ -106,7 +106,7 @@ export function DataTableToolbarShell<TData extends RowData>({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-72 2xl:min-w-96 flex-1 xl:max-w-80 xl:flex-none 2xl:max-w-110">
+      <div className="relative sm:min-w-72 2xl:min-w-96 flex-1 xl:max-w-80 xl:flex-none 2xl:max-w-110">
         <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}

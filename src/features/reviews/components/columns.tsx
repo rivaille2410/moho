@@ -3,14 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import {
-  Eye,
-  Copy,
-  Star,
-  Trash2,
-  BadgeCheck,
-  MoreHorizontal,
-} from "lucide-react";
+import { Eye, Copy, Star, Trash2, MoreHorizontal } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";
@@ -26,7 +19,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/toast";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -78,7 +70,7 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
         <DataTableColumnHeader column={column} title="Người đánh giá" />
       ),
       cell: ({ row }) => {
-        const { author, verifiedPurchase } = row.original;
+        const { author } = row.original;
         return (
           <div className="flex items-center gap-2">
             <Avatar className="size-9">
@@ -96,15 +88,6 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
                 <span className="line-clamp-1 text-xs text-muted-foreground">
                   {author.email}
                 </span>
-              )}
-              {verifiedPurchase && (
-                <Badge
-                  variant="outline"
-                  className="w-fit gap-1 border-emerald-500/20 bg-emerald-500/10 text-xs font-normal text-emerald-600"
-                >
-                  <BadgeCheck className="size-3" />
-                  Đã mua hàng
-                </Badge>
               )}
             </div>
           </div>
@@ -124,8 +107,9 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
       cell: ({ row }) => (
         <button
           type="button"
+          title={row.original.content}
           onClick={() => onView(row.original)}
-          className="line-clamp-2 max-w-xs text-left text-sm hover:text-secondary"
+          className="block max-w-xs truncate text-left text-sm hover:text-secondary"
         >
           {row.getValue("content")}
         </button>
@@ -153,10 +137,7 @@ export const getColumns = ({ onView, onDelete }: ColumnsOptions) =>
                 />
               )}
             </div>
-            <span
-              className="line-clamp-2 max-w-40 text-sm"
-              title={product.name}
-            >
+            <span className="min-w-48 whitespace-normal break-words text-sm">
               {product.name}
             </span>
           </Link>

@@ -92,21 +92,21 @@ export const getColumns = () =>
       cell: ({ row }) => <StockMovementTypeBadge type={row.getValue("type")} />,
     }),
 
-    columnHelper.accessor("quantity", {
+    columnHelper.accessor("delta", {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Số lượng" />
       ),
       cell: ({ row }) => {
-        const quantity = row.getValue("quantity") as number;
+        const delta = row.getValue("delta") as number;
         return (
           <span
             className={
-              quantity > 0
+              delta > 0
                 ? "font-medium text-green-600"
                 : "font-medium text-destructive"
             }
           >
-            {quantity > 0 ? `+${quantity}` : quantity}
+            {delta > 0 ? `+${delta}` : delta}
           </span>
         );
       },

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { Copy, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { Copy, Pencil, Trash2, MoreHorizontal, Star } from "lucide-react";
 
 import { type Warehouse } from "@/types/warehouse";
 
@@ -74,7 +74,7 @@ export const getColumns = ({ onEdit, onDelete }: ColumnsOptions) =>
         <DataTableColumnHeader column={column} title="Kho hàng" />
       ),
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Link
             href={`/dashboard/warehouses/${row.original.id}`}
             className="font-medium hover:text-secondary transition"
@@ -82,9 +82,12 @@ export const getColumns = ({ onEdit, onDelete }: ColumnsOptions) =>
             {row.getValue("name") as string}
           </Link>
           {row.original.isMain && (
-            <Badge variant="secondary" className="font-normal">
-              Kho chính
-            </Badge>
+            <Star
+              aria-label="Kho chính"
+              className="size-3.5 shrink-0 fill-amber-400 text-amber-400"
+            >
+              <title>Kho chính</title>
+            </Star>
           )}
         </div>
       ),

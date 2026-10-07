@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown } from "lucide-react";
+import { Users, Wallet } from "lucide-react";
 
 import {
   Card,
@@ -16,18 +16,6 @@ import { formatVND } from "@/lib/currency";
 import { type DashboardRange } from "@/types/dashboard";
 import { useTopCustomers } from "@/features/dashboard/hooks/use-top-customers";
 
-const RANK_RING = [
-  "ring-amber-400/70",
-  "ring-zinc-400/90",
-  "ring-orange-400/60",
-];
-
-const RANK_NUMERAL = [
-  "text-amber-500/40",
-  "text-zinc-500/70",
-  "text-orange-500/40",
-];
-
 export function TopCustomersList({
   range = "30d",
   limit = 5,
@@ -37,60 +25,86 @@ export function TopCustomersList({
 }) {
   const { data, isLoading, isError } = useTopCustomers({ range, limit });
 
-  const maxSpent = data?.length
-    ? Math.max(...data.map((c) => c.totalSpent))
-    : 0;
+  const hasData = !!data && data.length > 0;
+  const totalSpent = data?.reduce((sum, c) => sum + c.totalSpent, 0) ?? 0;
+  const maxSpent = hasData ? Math.max(...data.map((c) => c.totalSpent)) : 0;
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Khách hàng chi tiêu nhiều nhất</CardTitle>
-        <CardDescription>Xếp hạng theo tổng chi tiêu trong kỳ</CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5">
+            <CardTitle>Khách hàng chi tiêu nhiều nhất</CardTitle>
+            <CardDescription>
+              Xếp hạng theo tổng chi tiêu trong kỳ
+            </CardDescription>
+          </div>
+
+          {hasData && (
+            <div className="hidden items-center gap-3 rounded-xl border bg-muted/40 px-3 py-2 sm:flex">
+              <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Wallet className="size-4" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-xs text-muted-foreground">
+                  Tổng chi tiêu top {data.length}
+                </p>
+                <p className="text-lg font-bold tabular-nums">
+                  {formatVND(totalSpent)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </CardHeader>
+
       <CardContent className="px-2 sm:px-6">
         {isLoading ? (
-          <div className="flex flex-col gap-3 py-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
+          <div className="divide-y">
+            {Array.from({ length: limit }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 py-3.5">
+                <Skeleton className="size-11 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-1 w-full" />
+                </div>
+              </div>
             ))}
           </div>
-        ) : isError || !data || data.length === 0 ? (
+        ) : isError ? (
           <div className="flex h-40 w-full items-center justify-center text-sm text-muted-foreground">
-            Chưa có dữ liệu khách hàng trong khoảng thời gian này
+            Không thể tải dữ liệu khách hàng
+          </div>
+        ) : !hasData ? (
+          <div className="flex h-40 w-full flex-col items-center justify-center gap-3 text-center">
+            <div className="grid size-14 place-items-center rounded-full bg-primary/10 ring-8 ring-primary/5">
+              <Users className="size-7 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Chưa có khách hàng</p>
+              <p className="text-xs text-muted-foreground">
+                Chưa có dữ liệu chi tiêu trong khoảng thời gian này
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <ul className="divide-y">
             {data.map((customer, index) => {
               const share =
                 maxSpent > 0 ? (customer.totalSpent / maxSpent) * 100 : 0;
-              const isTopThree = index < 3;
+              const percent =
+                totalSpent > 0
+                  ? Math.round((customer.totalSpent / totalSpent) * 100)
+                  : 0;
+              const isFirst = index === 0;
 
               return (
-                <div
+                <li
                   key={customer.userId}
-                  className="group relative flex items-center gap-3 overflow-hidden rounded-lg px-2 py-3"
+                  className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0"
                 >
-                  <div
-                    className="pointer-events-none absolute inset-y-0 left-0 bg-primary/5 ease-out group-hover:bg-primary/10 transition"
-                    style={{ width: `${share}%` }}
-                  />
-
-                  <span
-                    className={`relative w-6 shrink-0 text-center text-xl font-bold tabular-nums ${
-                      RANK_NUMERAL[index] ?? "text-muted-foreground/30"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-
                   <div className="relative shrink-0">
-                    <Avatar
-                      className={`size-10 border ${
-                        isTopThree
-                          ? `ring-2 ring-offset-2 ring-offset-card ${RANK_RING[index]}`
-                          : ""
-                      }`}
-                    >
+                    <Avatar className="size-11 border">
                       <AvatarImage
                         src={customer.avatar ?? undefined}
                         alt={customer.name}
@@ -99,30 +113,49 @@ export function TopCustomersList({
                         {customer.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {index === 0 && (
-                      <Crown
-                        className="absolute -top-2 -right-1.5 size-4 rotate-12 fill-amber-400 text-amber-500"
-                        strokeWidth={1.5}
+                    <span
+                      className={`absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full border-2 border-card text-[10px] font-bold tabular-nums ${
+                        isFirst
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <div className="min-w-0 leading-tight">
+                        <p className="truncate text-sm font-medium">
+                          {customer.name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                          {customer.orderCount} đơn · {percent}%
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 text-sm font-semibold tabular-nums ${
+                          isFirst ? "text-primary" : ""
+                        }`}
+                      >
+                        {formatVND(customer.totalSpent)}
+                      </span>
+                    </div>
+
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ease-out ${
+                          isFirst ? "bg-primary" : "bg-primary/40"
+                        }`}
+                        style={{ width: `${share}%` }}
                       />
-                    )}
+                    </div>
                   </div>
-
-                  <div className="relative flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium leading-tight">
-                      {customer.name}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground leading-tight">
-                      {customer.orderCount} đơn hàng
-                    </span>
-                  </div>
-
-                  <span className="relative shrink-0 font-semibold tabular-nums text-sm">
-                    {formatVND(customer.totalSpent)}
-                  </span>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </CardContent>
     </Card>

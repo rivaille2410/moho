@@ -80,7 +80,7 @@ export function PostsTableToolbar({
             >
               <Trash2 className="size-4" />
               <span className="hidden xl:inline">
-                Xoá đã chọn ({selectedCount})
+                Xóa đã chọn ({selectedCount})
               </span>
             </Button>
           )}

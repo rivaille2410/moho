@@ -21,14 +21,14 @@ export function ReturnRequestRefundProofSection({
         href={returnRequest.refundProofImageUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative block aspect-square w-full overflow-hidden rounded-lg border"
+        className="group relative mx-auto block aspect-[9/20] w-full max-w-72 overflow-hidden rounded-lg border bg-muted"
       >
         <Image
           src={returnRequest.refundProofImageUrl}
           alt="Ảnh chứng minh đã hoàn tiền"
           fill
-          sizes="(max-width: 1024px) 100vw, 320px"
-          className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 288px"
+          className="object-contain transition-transform duration-300 ease-out group-hover:scale-105"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
           <ZoomIn className="size-6 text-white" />

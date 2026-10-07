@@ -28,6 +28,21 @@ const banners = [
     mobile: "/banner/banner-mobile-3.webp",
     alt: "Banner 3",
   },
+  {
+    desktop: "/banner/banner-4.webp",
+    mobile: "/banner/banner-mobile-4.webp",
+    alt: "Banner 4",
+  },
+  {
+    desktop: "/banner/banner-5.webp",
+    mobile: "/banner/banner-mobile-5.webp",
+    alt: "Banner 5",
+  },
+  {
+    desktop: "/banner/banner-6.webp",
+    mobile: "/banner/banner-mobile-6.webp",
+    alt: "Banner 6",
+  },
 ];
 
 const Banner = () => {

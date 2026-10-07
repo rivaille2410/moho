@@ -1,16 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { ChevronDown, PackageOpen } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 
+import { cn } from "@/lib/utils";
 import { ProductListItem } from "@/types/product";
 import { useGridColumns } from "@/hooks/use-grid-columns";
 
 import { ProductCard, ProductCardSkeleton } from "./product-card";
+
+const MOBILE_PREVIEW_COUNT = 4;
+
+const LOAD_MORE_SKELETON_ROWS = 2;
+
+const mobileOnlyPreview = (index: number, collapsed: boolean) =>
+  collapsed && index >= MOBILE_PREVIEW_COUNT && "max-sm:hidden";
 
 interface ProductGridProps {
   title?: string;
@@ -31,19 +39,29 @@ export function ProductGrid({
   seeMoreHref,
   isLoadingMore,
   title = "Sản phẩm",
-  skeletonCount = 12,
+  skeletonCount = 6,
 }: ProductGridProps) {
   const columns = useGridColumns();
+  const [expanded, setExpanded] = useState(false);
 
   const visibleCount =
-    products.length < columns
-      ? products.length
-      : Math.floor(products.length / columns) * columns;
+    hasMore && products.length >= columns
+      ? Math.floor(products.length / columns) * columns
+      : products.length;
 
   const visibleProducts = products.slice(0, visibleCount);
-
-  const hasHiddenRemainder = visibleCount < products.length;
   const isEmpty = !isLoading && products.length === 0;
+
+  const loadMoreSkeletonCount =
+    ((columns - (visibleProducts.length % columns)) % columns) +
+    columns * LOAD_MORE_SKELETON_ROWS;
+
+  const collapsed = !expanded;
+  const showMobileFade =
+    collapsed && !isLoading && visibleProducts.length > MOBILE_PREVIEW_COUNT;
+
+  const moreButtonClassName =
+    "pointer-events-auto inline-flex items-center gap-1.5 rounded-lg border bg-background py-1.5 px-3 text-sm font-medium text-secondary shadow-xs transition-transform active:scale-95";
 
   return (
     <section className="py-6">
@@ -76,37 +94,79 @@ export function ProductGrid({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {isLoading
-            ? Array.from({ length: skeletonCount }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
-            : visibleProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+        <div className="relative">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {isLoading
+              ? Array.from({ length: skeletonCount }).map((_, i) => (
+                  <div key={i} className={cn(mobileOnlyPreview(i, collapsed))}>
+                    <ProductCardSkeleton />
+                  </div>
+                ))
+              : visibleProducts.map((product, i) => (
+                  <div
+                    key={product.id}
+                    className={cn(mobileOnlyPreview(i, collapsed))}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+
+            {!isLoading &&
+              isLoadingMore &&
+              Array.from({ length: loadMoreSkeletonCount }).map((_, i) => (
+                <div
+                  key={`more-${i}`}
+                  className={cn(
+                    mobileOnlyPreview(visibleProducts.length + i, collapsed),
+                  )}
+                >
+                  <ProductCardSkeleton />
+                </div>
               ))}
+          </div>
+
+          {showMobileFade && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 sm:hidden">
+              <div className="absolute inset-0 backdrop-blur-[3px] mask-[linear-gradient(to_top,black_45%,transparent)]" />
+              <div className="absolute inset-0 bg-linear-to-t from-background via-background/85 to-transparent" />
+
+              <div className="absolute inset-x-0 bottom-1 flex justify-center">
+                {seeMoreHref ? (
+                  <Link href={seeMoreHref} className={moreButtonClassName}>
+                    Xem thêm
+                    <ChevronDown className="size-3.5" />
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(true)}
+                    className={moreButtonClassName}
+                  >
+                    Xem thêm
+                    <ChevronDown className="size-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {!isLoading && onLoadMore && (hasMore || hasHiddenRemainder) && (
-        <div className="mt-8 flex justify-center">
+      {!isLoading && onLoadMore && hasMore && !isLoadingMore && (
+        <div
+          className={cn(
+            "mt-8 flex justify-center",
+            collapsed && "max-sm:hidden",
+          )}
+        >
           <Button
             size={"lg"}
             variant="ghost"
             onClick={onLoadMore}
-            disabled={isLoadingMore}
             className="text-secondary hover:text-secondary hover:bg-secondary/10"
           >
-            {isLoadingMore ? (
-              <>
-                <Spinner className="size-4" />
-                Đang tải...
-              </>
-            ) : (
-              <>
-                Xem thêm
-                <ChevronDown className="size-4" />
-              </>
-            )}
+            Xem thêm
+            <ChevronDown className="size-4" />
           </Button>
         </div>
       )}

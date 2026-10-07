@@ -4,9 +4,21 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useRef, useEffect, useCallback, use } from "react";
 
+import {
+  Minus,
+  Plus,
+  ZoomIn,
+  ImageOff,
+  ChevronDown,
+  CheckCircle2,
+} from "lucide-react";
 import DOMPurify from "dompurify";
 import Autoplay from "embla-carousel-autoplay";
-import { Minus, Plus, CheckCircle2, ChevronDown, ImageOff } from "lucide-react";
+import "yet-another-react-lightbox/styles.css";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 
 import { cn } from "@/lib/utils";
 import type { ProductVariant } from "@/types/product";
@@ -62,12 +74,14 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const DESCRIPTION_COLLAPSED_HEIGHT = 480;
 
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [isDescOverflowing, setIsDescOverflowing] = useState(false);
   const descRef = useRef<HTMLDivElement>(null);
+  const thumbsRef = useRef<HTMLDivElement>(null);
 
   const autoplayPlugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true }),
@@ -87,6 +101,15 @@ export default function ProductPage({ params }: ProductPageProps) {
     return product.images;
   }, [product, selectedVariant]);
 
+  const lightboxSlides = useMemo(
+    () =>
+      images.map((image) => ({
+        src: image.url,
+        alt: product?.name ?? "",
+      })),
+    [images, product?.name],
+  );
+
   const sanitizedDescription = useMemo(() => {
     if (!product?.description) return null;
     return DOMPurify.sanitize(product.description);
@@ -96,6 +119,19 @@ export default function ProductPage({ params }: ProductPageProps) {
     (index: number) => {
       setActiveImageIndex(index);
       carouselApi?.scrollTo(index);
+    },
+    [carouselApi],
+  );
+
+  const openLightbox = useCallback(() => {
+    autoplayPlugin.current.stop();
+    setIsLightboxOpen(true);
+  }, []);
+
+  const handleLightboxView = useCallback(
+    (index: number) => {
+      setActiveImageIndex(index);
+      carouselApi?.scrollTo(index, true);
     },
     [carouselApi],
   );
@@ -124,6 +160,21 @@ export default function ProductPage({ params }: ProductPageProps) {
     carouselApi?.scrollTo(0);
   }, [carouselApi, selectedVariant?.id]);
 
+  useEffect(() => {
+    const container = thumbsRef.current;
+    const el = container?.children[activeImageIndex] as HTMLElement | undefined;
+    if (!container || !el) return;
+
+    const c = container.getBoundingClientRect();
+    const e = el.getBoundingClientRect();
+
+    container.scrollBy({
+      top: e.top - c.top - (c.height - e.height) / 2,
+      left: e.left - c.left - (c.width - e.width) / 2,
+      behavior: "smooth",
+    });
+  }, [activeImageIndex]);
+
   if (isLoading) {
     return (
       <div className="pb-12">
@@ -143,6 +194,7 @@ export default function ProductPage({ params }: ProductPageProps) {
     : null;
   const savings = compareAtPrice ? compareAtPrice - price : null;
   const maxStock = selectedVariant?.stock ?? product.totalStock;
+  const isOutOfStock = maxStock === 0;
 
   const dimensions = [
     product.length ? `Dài ${product.length}cm` : null,
@@ -195,41 +247,51 @@ export default function ProductPage({ params }: ProductPageProps) {
       <div className="wrapper space-y-3">
         <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2">
           {images.length > 0 ? (
-            <div className="flex flex-col-reverse gap-3 md:sticky md:top-20 lg:flex-row">
-              <div className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-                {images.map((image, index) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={() => handleThumbnailClick(index)}
-                    className={cn(
-                      "relative size-17.5 shrink-0 overflow-hidden rounded-md border transition",
-                      index === activeImageIndex
-                        ? "border-secondary ring-3 ring-secondary/40"
-                        : "border-border hover:border-secondary hover:ring-3 hover:ring-secondary/40",
-                    )}
-                  >
-                    <Image
-                      fill
-                      sizes="70px"
-                      src={image.url}
-                      alt={product.name}
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
+            <div className="flex flex-col-reverse gap-3 md:sticky md:top-20 lg:grid lg:grid-cols-[78px_1fr]">
+              <div className="relative">
+                <div
+                  ref={thumbsRef}
+                  className="flex gap-2 overflow-x-auto p-1 px-2 -mx-2 lg:absolute lg:inset-0 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto"
+                >
+                  {images.map((image, index) => (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => handleThumbnailClick(index)}
+                      className={cn(
+                        "relative size-17.5 shrink-0 overflow-hidden rounded-md border transition",
+                        index === activeImageIndex
+                          ? "border-secondary ring-3 ring-secondary/40"
+                          : "border-border hover:border-secondary hover:ring-3 hover:ring-secondary/40",
+                      )}
+                    >
+                      <Image
+                        fill
+                        sizes="70px"
+                        src={image.url}
+                        alt={product.name}
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <Carousel
                 setApi={setCarouselApi}
                 plugins={[autoplayPlugin.current]}
-                className="flex-1"
+                className="min-w-0"
                 opts={{ loop: true }}
               >
                 <CarouselContent>
                   {images.map((image) => (
                     <CarouselItem key={image.id}>
-                      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+                      <button
+                        type="button"
+                        onClick={openLightbox}
+                        aria-label="Phóng to ảnh sản phẩm"
+                        className="group relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-muted"
+                      >
                         <Image
                           fill
                           priority
@@ -238,11 +300,42 @@ export default function ProductPage({ params }: ProductPageProps) {
                           src={image.url}
                           sizes="(min-width: 768px) 560px, 100vw"
                         />
-                      </div>
+                        <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-background/80 p-2 opacity-0 shadow-sm backdrop-blur-sm transition group-hover:opacity-100">
+                          <ZoomIn className="size-4" />
+                        </span>
+                      </button>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
               </Carousel>
+
+              <Lightbox
+                open={isLightboxOpen}
+                close={() => setIsLightboxOpen(false)}
+                index={activeImageIndex}
+                slides={lightboxSlides}
+                plugins={[Zoom, Thumbnails]}
+                carousel={{ finite: images.length <= 1 }}
+                zoom={{
+                  maxZoomPixelRatio: 3,
+                  scrollToZoom: true,
+                  doubleClickMaxStops: 2,
+                }}
+                thumbnails={{
+                  width: 72,
+                  height: 72,
+                  gap: 8,
+                  border: 0,
+                  borderRadius: 6,
+                  position: "bottom",
+                }}
+                on={{ view: ({ index }) => handleLightboxView(index) }}
+                render={
+                  images.length <= 1
+                    ? { buttonPrev: () => null, buttonNext: () => null }
+                    : undefined
+                }
+              />
             </div>
           ) : (
             <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-lg bg-muted md:sticky md:top-20">
@@ -352,18 +445,18 @@ export default function ProductPage({ params }: ProductPageProps) {
                     <button
                       type="button"
                       className="p-2.5 disabled:opacity-40"
-                      disabled={quantity <= 1}
+                      disabled={isOutOfStock || quantity <= 1}
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     >
                       <Minus className="size-4" />
                     </button>
                     <span className="w-10 border-x py-2 text-center text-sm">
-                      {quantity}
+                      {isOutOfStock ? 0 : quantity}
                     </span>
                     <button
                       type="button"
                       className="p-2.5 disabled:opacity-40"
-                      disabled={quantity >= maxStock}
+                      disabled={isOutOfStock || quantity >= maxStock}
                       onClick={() =>
                         setQuantity((q) => Math.min(maxStock, q + 1))
                       }
@@ -371,23 +464,30 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <Plus className="size-4" />
                     </button>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {maxStock > 0 ? `Còn ${maxStock} sản phẩm` : "Hết hàng"}
+                  <span
+                    className={cn(
+                      "text-sm",
+                      isOutOfStock
+                        ? "font-medium text-destructive"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {isOutOfStock ? "Hết hàng" : `Còn ${maxStock} sản phẩm`}
                   </span>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
                   <Button
-                    size={"xl"}
-                    disabled={maxStock === 0}
+                    size="xl"
+                    disabled={isOutOfStock}
                     onClick={handleAddToCart}
                   >
                     Thêm vào giỏ
                   </Button>
                   <Button
-                    size={"xl"}
-                    variant={"secondary"}
-                    disabled={maxStock === 0}
+                    size="xl"
+                    variant="secondary"
+                    disabled={isOutOfStock}
                     onClick={handleBuyNow}
                   >
                     Mua ngay
@@ -442,7 +542,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     ref={descRef}
                     className={cn(
                       "prose prose-sm max-w-none overflow-hidden prose-img:mx-auto prose-img:block prose-img:rounded-lg transition-[max-height] duration-500 ease-in-out",
-                      !isDescExpanded && "max-h-120",
+                      !isDescExpanded && "max-h-320",
                     )}
                     dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                   />

@@ -17,15 +17,19 @@ export const createProductSchema = z.object({
 
   price: z
     .number({ error: "Vui lòng nhập giá bán" })
-    .min(0, "Giá bán phải lớn hơn hoặc bằng 0"),
+    .positive("Giá bán phải lớn hơn 0"),
 
   discountPercent: z
     .number()
     .min(0, "Phần trăm giảm giá phải lớn hơn hoặc bằng 0")
     .max(99, "Phần trăm giảm giá phải nhỏ hơn 100")
-    .optional(),
+    .optional()
+    .or(z.nan().transform(() => undefined)),
 
-  categoryId: z.uuid("ID danh mục không hợp lệ"),
+  categoryId: z
+    .string()
+    .min(1, "Vui lòng chọn danh mục")
+    .pipe(z.uuid("ID danh mục không hợp lệ")),
 
   status: z.enum(["DRAFT", "ACTIVE"]),
 });
@@ -96,6 +100,8 @@ export type VariantFormValues = z.infer<typeof variantSchema>;
 
 export type CreateProductFormValues = z.infer<typeof createProductSchema>;
 
+export type CreateProductFormInput = z.input<typeof createProductSchema>;
+
 export function generateSku(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -103,9 +109,9 @@ export function generateSku(): string {
 }
 
 export function calculateCompareAtPrice(
-  price: number,
+  price: number | undefined,
   discountPercent: number | undefined,
 ): number | undefined {
-  if (!discountPercent || discountPercent <= 0) return undefined;
+  if (!price || !discountPercent || discountPercent <= 0) return undefined;
   return Math.round(price / (1 - discountPercent / 100));
 }

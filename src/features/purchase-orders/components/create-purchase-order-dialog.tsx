@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { CurrencyInput } from "@/components/ui/currency-input";
+import { CurrencyInput } from "@/components/shared/currency-input";
 
 import { type CreatePurchaseOrderInput } from "@/types/purchase-order";
 
@@ -67,7 +67,10 @@ export function CreatePurchaseOrderDialog({
   const [items, setItems] = React.useState<ItemFormState[]>([{ ...emptyItem }]);
 
   const { data: suppliers } = useSuppliers({ limit: 100 });
+  const supplierList = suppliers?.data ?? [];
+
   const { data: warehouses } = useWarehouses();
+  const warehouseList = warehouses ?? [];
   const createPO = useCreatePurchaseOrder();
 
   React.useEffect(() => {
@@ -88,9 +91,9 @@ export function CreatePurchaseOrderDialog({
 
   const selectVariant = (index: number, option: VariantSelection) => {
     updateItem(index, {
-      variantId: option.variantId,
-      variantLabel: option.variantLabel,
-      unitCost: option.unitCost,
+      variantId: option.variantId ?? "",
+      variantLabel: option.variantLabel ?? undefined,
+      unitCost: option.unitCost ?? 0,
     });
   };
 
@@ -142,24 +145,37 @@ export function CreatePurchaseOrderDialog({
                 Nhà cung cấp <span className="text-destructive">*</span>
               </Label>
               <Select
-                items={(suppliers?.data ?? []).map((s) => ({
+                items={supplierList.map((s) => ({
                   label: s.name,
                   value: s.id,
                 }))}
                 value={supplierId}
                 onValueChange={(value) => setSupplierId(value ?? "")}
+                disabled={supplierList.length === 0}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn nhà cung cấp" />
+                  <SelectValue
+                    placeholder={
+                      supplierList.length === 0
+                        ? "Chưa có nhà cung cấp"
+                        : "Chọn nhà cung cấp"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(suppliers?.data ?? []).map((s) => (
+                  {supplierList.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {supplierList.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Chưa có nhà cung cấp nào. Hãy tạo nhà cung cấp trước khi tạo
+                  đơn nhập hàng.
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">

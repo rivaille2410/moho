@@ -138,7 +138,7 @@
 
 @layer utilities {
   .wrapper {
-    @apply 2xl:max-w-[1650px] mx-auto px-4;
+    @apply max-w-[1500px] mx-auto px-4;
   }
 
   @keyframes marquee {
@@ -152,6 +152,96 @@
 
   .animate-marquee {
     animation: marquee 60s linear infinite;
+  }
+
+  @keyframes nf-swing {
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+  @keyframes nf-flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 1;
+    }
+    48% {
+      opacity: 0.35;
+    }
+    52% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0.6;
+    }
+    73% {
+      opacity: 1;
+    }
+  }
+  @keyframes nf-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes nf-glow {
+    0%,
+    100% {
+      opacity: 0.9;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  .nf-swing {
+    animation: nf-swing 5s ease-in-out infinite;
+  }
+  .nf-flicker {
+    animation: nf-flicker 4s linear infinite;
+  }
+  .nf-float {
+    animation: nf-float 4s ease-in-out infinite;
+  }
+  .nf-glow {
+    animation: nf-glow 4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nf-swing,
+    .nf-flicker,
+    .nf-float,
+    .nf-glow {
+      animation: none;
+    }
+  }
+
+  @keyframes logo-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-logo-marquee {
+    animation: logo-marquee var(--marquee-duration, 30s) linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-logo-marquee {
+      animation: none;
+    }
   }
 
   * {
