@@ -85,6 +85,7 @@ export type PublicCategory = {
   id: string;
   name: string;
   slug: string;
+  parentId: string;
 };
 
 export type PublicColorOption = {
@@ -172,6 +173,16 @@ export type RemoveVariantArgs = {
 };
 
 export type RemoveProductImageArgs = {
+  productId: string;
+  imageId: string;
+};
+
+export type RemoveProductImagesArgs = {
+  productId: string;
+  imageIds: string[];
+};
+
+export type SetProductThumbnailArgs = {
   productId: string;
   imageId: string;
 };

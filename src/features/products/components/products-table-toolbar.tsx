@@ -1,3 +1,5 @@
+import * as React from "react";
+
 import { Trash2 } from "lucide-react";
 import { type ReactTable } from "@tanstack/react-table";
 
@@ -5,6 +7,11 @@ import { CreateProductDialog } from "./create-product-dialog";
 
 import { ProductListItem, ProductStatus } from "@/types/product";
 import { useExportProducts } from "@/features/products/hooks/use-export-products";
+import {
+  useCategoryTree,
+  flattenCategoryTree,
+} from "@/features/categories/hooks/use-category-tree";
+import { CategoryTreeItemLabel } from "@/features/categories/components/category-tree-item-label";
 
 import {
   Select,
@@ -62,19 +69,40 @@ export function ProductsTableToolbar({
   table,
   search,
   status,
+  categoryId,
   outOfStock,
   onBulkDelete,
   onStatusChange,
   onSearchChange,
+  onCategoryChange,
   onOutOfStockChange,
 }: ProductsTableToolbarProps) {
-  const isFiltered = search.length > 0 || !!status || outOfStock !== undefined;
+  const isFiltered =
+    search.length > 0 || !!status || !!categoryId || outOfStock !== undefined;
 
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedCount = selectedRows.length;
 
   const { mutate: exportProducts, isPending: isExporting } =
     useExportProducts();
+
+  const { data: categoryTree } = useCategoryTree();
+
+  const flatCategories = React.useMemo(
+    () => flattenCategoryTree(categoryTree ?? []),
+    [categoryTree],
+  );
+
+  const categoryItems = React.useMemo(
+    () => [
+      { label: "Tất cả danh mục", value: "all" },
+      ...flatCategories.map((category) => ({
+        label: category.name,
+        value: category.id,
+      })),
+    ],
+    [flatCategories],
+  );
 
   return (
     <DataTableToolbarShell
@@ -94,7 +122,7 @@ export function ProductsTableToolbar({
             >
               <Trash2 className="size-4" />
               <span className="hidden xl:inline">
-                Xoá đã chọn ({selectedCount})
+                Xóa đã chọn ({selectedCount})
               </span>
             </Button>
           )}
@@ -104,7 +132,9 @@ export function ProductsTableToolbar({
             variant="outline"
             className="shrink-0"
             disabled={isExporting}
-            onClick={() => exportProducts({ search, status, outOfStock })}
+            onClick={() =>
+              exportProducts({ search, status, categoryId, outOfStock })
+            }
           >
             {isExporting ? (
               <Spinner className="size-4 text-secondary" />
@@ -121,6 +151,7 @@ export function ProductsTableToolbar({
       onReset={() => {
         onSearchChange("");
         onStatusChange(undefined);
+        onCategoryChange(undefined);
         onOutOfStockChange(undefined);
       }}
       onSearchChange={onSearchChange}
@@ -140,6 +171,26 @@ export function ProductsTableToolbar({
           {statusItems.map((item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        items={categoryItems}
+        value={categoryId ?? "all"}
+        onValueChange={(value: string | null) =>
+          onCategoryChange(toFilterValue(value))
+        }
+      >
+        <SelectTrigger className="w-full lg:w-fit">
+          <SelectValue placeholder="Danh mục" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tất cả danh mục</SelectItem>
+          {flatCategories.map((category) => (
+            <SelectItem key={category.id} value={category.id}>
+              <CategoryTreeItemLabel item={category} />
             </SelectItem>
           ))}
         </SelectContent>

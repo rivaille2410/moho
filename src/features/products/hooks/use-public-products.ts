@@ -63,8 +63,6 @@ async function fetchPublicProducts(
   return res.json();
 }
 
-// Best sellers ignore `sortBy` server-side (always sorted by soldCount desc),
-// but all other filters (category, price, colors, onSale, outOfStock) apply.
 async function fetchPublicBestSellers(
   params: QueryPublicProductsParams,
 ): Promise<ProductsResponse> {
@@ -104,7 +102,6 @@ async function fetchPublicCategories(
   return res.json();
 }
 
-// NOTE: assumed route — adjust to match the actual controller path if different.
 async function fetchPublicColors(
   categoryId?: string,
 ): Promise<PublicColorOption[]> {
@@ -124,15 +121,18 @@ async function fetchPublicColors(
   return res.json();
 }
 
-export const usePublicProducts = (params: QueryPublicProductsParams = {}) => {
+export const usePublicProducts = (
+  params: QueryPublicProductsParams = {},
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: ["public-products", params],
     queryFn: () => fetchPublicProducts(params),
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
+    enabled: options?.enabled,
   });
 };
-
 export const usePublicProductsInfinite = (
   params: Omit<QueryPublicProductsParams, "page"> = { limit: 12 },
 ) => {

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 
 import {
   shipmentInfoSchema,
@@ -23,6 +24,7 @@ import {
   buildShipmentInfoValuesFromShipment,
 } from "@/schemas/shipment";
 import { type Shipment } from "@/types/shipment";
+import { PhoneInput } from "@/components/shared/phone-input";
 import { useUpdateShipment } from "@/features/shipments/hooks/use-update-shipment";
 
 interface Props {
@@ -61,25 +63,21 @@ export function ShipmentInfoForm({ shipment }: Props) {
       <FieldGroup>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel>Mã vận đơn đối tác</FieldLabel>
-            <Input
-              placeholder="Mã tracking (nếu có)"
-              disabled={isLocked}
-              {...form.register("trackingCode")}
-            />
-            {form.formState.errors.trackingCode && (
-              <FieldError>
-                {form.formState.errors.trackingCode.message}
-              </FieldError>
-            )}
+            <FieldLabel>Mã vận đơn</FieldLabel>
+            <Input value={shipment.code} disabled readOnly />
           </Field>
 
           <Field>
             <FieldLabel>Ngày hẹn giao</FieldLabel>
-            <Input
-              type="date"
-              disabled={isLocked}
-              {...form.register("scheduledAt")}
+            <Controller
+              control={form.control}
+              name="scheduledAt"
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value || undefined}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {form.formState.errors.scheduledAt && (
               <FieldError>
@@ -106,10 +104,17 @@ export function ShipmentInfoForm({ shipment }: Props) {
 
           <Field>
             <FieldLabel>Số điện thoại tài xế</FieldLabel>
-            <Input
-              placeholder="09xxxxxxxx"
-              disabled={isLocked}
-              {...form.register("driverPhone")}
+            <Controller
+              control={form.control}
+              name="driverPhone"
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isLocked}
+                  placeholder="Nhập số điện thoại"
+                />
+              )}
             />
             {form.formState.errors.driverPhone && (
               <FieldError>

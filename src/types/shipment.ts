@@ -20,9 +20,10 @@ export interface ShipmentOrderSummary {
 
 export interface ShipmentItem {
   orderItemId: string;
+  productId: string;
   productName: string;
   variantName: string;
-  thumbnailUrl: string | null;
+  thumbnailUrl?: string | null;
   quantity: number;
   orderedQuantity: number;
 }

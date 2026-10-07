@@ -2,16 +2,9 @@
 
 import { useState } from "react";
 
-import {
-  Tag,
-  Plus,
-  Package,
-  Percent,
-  RefreshCw,
-  DollarSign,
-} from "lucide-react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, DefaultValues, useForm } from "react-hook-form";
+import { Tag, Plus, Package, Percent, RefreshCw } from "lucide-react";
 
 import {
   Field,
@@ -39,11 +32,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { CurrencyInput } from "@/components/shared/currency-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 import {
   generateSku,
   createProductSchema,
+  CreateProductFormInput,
   CreateProductFormValues,
   calculateCompareAtPrice,
 } from "@/schemas/product";
@@ -59,12 +54,12 @@ const statusItems = [
   { label: "Đang bán", value: "ACTIVE" },
 ];
 
-function buildDefaultValues(): CreateProductFormValues {
+function buildDefaultValues(): DefaultValues<CreateProductFormInput> {
   return {
     name: "",
     sku: generateSku(),
     description: "",
-    price: 0,
+    price: undefined,
     discountPercent: undefined,
     categoryId: "",
     status: "DRAFT",
@@ -88,7 +83,11 @@ export function CreateProductDialog() {
     item: c,
   }));
 
-  const form = useForm<CreateProductFormValues>({
+  const form = useForm<
+    CreateProductFormInput,
+    unknown,
+    CreateProductFormValues
+  >({
     resolver: zodResolver(createProductSchema),
     defaultValues: buildDefaultValues(),
   });
@@ -188,11 +187,17 @@ export function CreateProductDialog() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel>Giá bán</FieldLabel>
-                <Input
-                  type="number"
-                  startIcon={<DollarSign />}
-                  placeholder="0"
-                  {...form.register("price", { valueAsNumber: true })}
+                <Controller
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <CurrencyInput
+                      placeholder="0"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
                 />
                 {form.formState.errors.price && (
                   <FieldError>{form.formState.errors.price.message}</FieldError>
@@ -219,7 +224,7 @@ export function CreateProductDialog() {
                   compareAtPrice !== undefined && (
                     <FieldDescription>
                       Giá gạch ngang sẽ hiển thị:{" "}
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-secondary">
                         {formatPrice(compareAtPrice)}
                       </span>
                     </FieldDescription>

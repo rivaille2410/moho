@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { CurrencyInput } from "@/components/ui/currency-input";
+import { CurrencyInput } from "@/components/shared/currency-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 import {
@@ -109,7 +109,7 @@ export function ProductGeneralForm({ product }: Props) {
   const compareAtPrice = calculateCompareAtPrice(price, discountPercent);
 
   const onSubmit = (values: GeneralInfoFormValues) => {
-    const { discountPercent, materials, ...rest } = values;
+    const { discountPercent, materials, sku: _sku, ...rest } = values;
 
     updateProduct.mutate({
       id: product.id,
@@ -187,6 +187,63 @@ export function ProductGeneralForm({ product }: Props) {
           </Field>
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <Field>
+            <FieldLabel>Danh mục</FieldLabel>
+            <Select
+              items={categoryItems}
+              value={form.watch("categoryId")}
+              onValueChange={(value: string | null) =>
+                form.setValue("categoryId", value ?? "", {
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn danh mục" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <CategoryTreeItemLabel item={item.item} />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.formState.errors.categoryId && (
+              <FieldError>
+                {form.formState.errors.categoryId.message}
+              </FieldError>
+            )}
+          </Field>
+
+          <Field>
+            <FieldLabel>Trạng thái</FieldLabel>
+            <Select
+              items={statusItems}
+              value={form.watch("status")}
+              onValueChange={(value) =>
+                value &&
+                form.setValue(
+                  "status",
+                  value as GeneralInfoFormValues["status"],
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Field>
             <FieldLabel>Dài (cm)</FieldLabel>
@@ -216,68 +273,6 @@ export function ProductGeneralForm({ product }: Props) {
             />
           </Field>
         </div>
-
-        <Field>
-          <FieldLabel>Danh mục</FieldLabel>
-          <Select
-            items={categoryItems}
-            value={form.watch("categoryId")}
-            onValueChange={(value: string | null) =>
-              form.setValue("categoryId", value ?? "", { shouldValidate: true })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Chọn danh mục" />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <CategoryTreeItemLabel item={item.item} />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {form.formState.errors.categoryId && (
-            <FieldError>{form.formState.errors.categoryId.message}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel>Mô tả</FieldLabel>
-          <RichTextEditor
-            value={form.watch("description") ?? ""}
-            onChange={(html) =>
-              form.setValue("description", html, { shouldValidate: true })
-            }
-            placeholder="Nhập mô tả sản phẩm..."
-          />
-          {form.formState.errors.description && (
-            <FieldError>{form.formState.errors.description.message}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel>Trạng thái</FieldLabel>
-          <Select
-            items={statusItems}
-            value={form.watch("status")}
-            onValueChange={(value) =>
-              value &&
-              form.setValue("status", value as GeneralInfoFormValues["status"])
-            }
-          >
-            <SelectTrigger className="w-full md:w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statusItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
 
         <Field>
           <div className="mb-1 flex items-center justify-between">
@@ -324,9 +319,23 @@ export function ProductGeneralForm({ product }: Props) {
             ))}
           </div>
         </Field>
+
+        <Field>
+          <FieldLabel>Mô tả</FieldLabel>
+          <RichTextEditor
+            value={form.watch("description") ?? ""}
+            onChange={(html) =>
+              form.setValue("description", html, { shouldValidate: true })
+            }
+            placeholder="Nhập mô tả sản phẩm..."
+          />
+          {form.formState.errors.description && (
+            <FieldError>{form.formState.errors.description.message}</FieldError>
+          )}
+        </Field>
       </FieldGroup>
 
-      <div className="flex justify-end">
+      <div className="sticky bottom-0 z-10 -mx-4 flex justify-end border-t bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
         <Button type="submit" size="lg" disabled={updateProduct.isPending}>
           {updateProduct.isPending && <Spinner className="size-4" />}
           {updateProduct.isPending ? "Đang lưu..." : "Lưu thay đổi"}

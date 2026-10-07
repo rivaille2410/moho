@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
-import { MapPin, StickyNote, Ban } from "lucide-react";
+import { MapPin, StickyNote, Ban, ArrowUpRight } from "lucide-react";
 
 import {
   Dialog,
@@ -20,6 +21,11 @@ interface ViewOrderDialogProps {
   order: Order | null;
   onOpenChange: (open: boolean) => void;
 }
+
+// Đổi tại đây nếu route chi tiết của bạn khác
+const userHref = (userId: string | number) => `/dashboard/users/${userId}`;
+const productHref = (productId: string | number) =>
+  `/dashboard/products/${productId}`;
 
 function formatCurrency(value: string | number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -64,8 +70,13 @@ export function ViewOrderDialog({ order, onOpenChange }: ViewOrderDialogProps) {
                     {order.recipientName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-1">
-                  <span className="font-medium">{order.recipientName}</span>
+                <div className="flex flex-col">
+                  <Link
+                    href={userHref(order.user.id)}
+                    className="font-medium transition-colors duration-200 hover:text-secondary"
+                  >
+                    {order.recipientName}
+                  </Link>
                   <span className="text-sm text-muted-foreground">
                     {order.recipientPhone}
                   </span>
@@ -116,22 +127,28 @@ export function ViewOrderDialog({ order, onOpenChange }: ViewOrderDialogProps) {
 
             <div className="flex flex-col gap-3">
               {order.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3">
-                  <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <div key={item.id} className="group flex items-center gap-3">
+                  <Link
+                    href={productHref(item.productId)}
+                    className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted"
+                  >
                     {item.thumbnailUrl && (
                       <Image
                         fill
                         src={item.thumbnailUrl}
                         sizes="48px"
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         alt={item.productName}
                       />
                     )}
-                  </div>
+                  </Link>
                   <div className="flex flex-1 flex-col gap-0.5">
-                    <span className="line-clamp-1 text-sm font-medium">
+                    <Link
+                      href={productHref(item.productId)}
+                      className="line-clamp-1 text-sm font-medium transition-colors duration-200 hover:text-secondary"
+                    >
                       {item.productName}
-                    </span>
+                    </Link>
                     <span className="text-xs text-muted-foreground">
                       {item.variantName} · x{item.quantity}
                     </span>

@@ -1,48 +1,91 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-import { ChevronDown, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 import { PostCard, PostCardSkeleton } from "./post-card";
 
-import { PostListItem } from "@/types/post";
 import { useGridColumns } from "@/hooks/use-grid-columns";
+import { PostListItem } from "@/types/post";
 
 interface PostGridProps {
   title?: string;
   hasMore?: boolean;
   isLoading: boolean;
   seeMoreHref?: string;
+  posts: PostListItem[];
+  isLoadingMore?: boolean;
   skeletonCount?: number;
   onLoadMore?: () => void;
-  isLoadingMore?: boolean;
-  posts: PostListItem[];
 }
+
+// basis phải khớp với useGridColumns: 2 / 3 / 4 / 5 / 6
+const ITEM_CLASS =
+  "pl-3 sm:pl-5 basis-1/2 sm:basis-1/3 lg:basis-1/4 xl:basis-1/5 2xl:basis-1/6";
+
+// Tải thêm khi cuộn qua ngưỡng này (0 -> 1)
+const LOAD_MORE_THRESHOLD = 0.75;
 
 export function PostGrid({
   posts,
   hasMore,
   isLoading,
-  onLoadMore,
   seeMoreHref,
+  onLoadMore,
+  skeletonCount,
   isLoadingMore,
   title = "Bài viết",
-  skeletonCount = 12,
 }: PostGridProps) {
   const columns = useGridColumns();
+  const [api, setApi] = useState<CarouselApi>();
 
-  const visibleCount = !hasMore
-    ? posts.length
-    : posts.length < columns
-      ? posts.length
-      : Math.floor(posts.length / columns) * columns;
-
-  const visiblePosts = posts.slice(0, visibleCount);
   const isEmpty = !isLoading && posts.length === 0;
+
+  // Khi còn dữ liệu: chỉ hiển thị số bài là bội số của số cột (không bị lẻ).
+  // Khi đã tải hết: hiển thị tất cả, nhóm cuối được phép lẻ.
+  const visiblePosts = hasMore
+    ? posts.slice(0, Math.floor(posts.length / columns) * columns)
+    : posts;
+
+  const initialSkeletons = skeletonCount ?? columns;
+
+  // Luôn giữ callback mới nhất mà không làm effect chạy lại
+  const onLoadMoreRef = useRef(onLoadMore);
+  useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  }, [onLoadMore]);
+
+  useEffect(() => {
+    if (!api || !hasMore || isLoadingMore) return;
+
+    const check = () => {
+      if (api.scrollProgress() >= LOAD_MORE_THRESHOLD || !api.canScrollNext()) {
+        onLoadMoreRef.current?.();
+      }
+    };
+
+    api.on("scroll", check);
+    api.on("select", check);
+    api.on("reInit", check);
+    check();
+
+    return () => {
+      api.off("scroll", check);
+      api.off("select", check);
+      api.off("reInit", check);
+    };
+  }, [api, hasMore, isLoadingMore, visiblePosts.length]);
 
   return (
     <section className="py-6">
@@ -75,39 +118,35 @@ export function PostGrid({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {isLoading
-            ? Array.from({ length: skeletonCount }).map((_, i) => (
-                <PostCardSkeleton key={i} />
-              ))
-            : visiblePosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-        </div>
-      )}
+        <Carousel
+          setApi={setApi}
+          opts={{ align: "start", dragFree: true }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-3 sm:-ml-5">
+            {isLoading
+              ? Array.from({ length: initialSkeletons }).map((_, i) => (
+                  <CarouselItem key={i} className={ITEM_CLASS}>
+                    <PostCardSkeleton />
+                  </CarouselItem>
+                ))
+              : visiblePosts.map((post) => (
+                  <CarouselItem key={post.id} className={ITEM_CLASS}>
+                    <PostCard post={post} />
+                  </CarouselItem>
+                ))}
 
-      {!isLoading && onLoadMore && hasMore && (
-        <div className="mt-8 flex justify-center">
-          <Button
-            size={"lg"}
-            variant="ghost"
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            className="text-secondary hover:text-secondary hover:bg-secondary/10"
-          >
-            {isLoadingMore ? (
-              <>
-                <Spinner className="size-4" />
-                Đang tải...
-              </>
-            ) : (
-              <>
-                Xem thêm
-                <ChevronDown className="size-4" />
-              </>
-            )}
-          </Button>
-        </div>
+            {isLoadingMore &&
+              Array.from({ length: columns }).map((_, i) => (
+                <CarouselItem key={`more-${i}`} className={ITEM_CLASS}>
+                  <PostCardSkeleton />
+                </CarouselItem>
+              ))}
+          </CarouselContent>
+
+          <CarouselPrevious className="left-2 hidden sm:inline-flex" />
+          <CarouselNext className="right-2 hidden sm:inline-flex" />
+        </Carousel>
       )}
     </section>
   );

@@ -10,7 +10,6 @@ import {
   ThumbsUp,
   UserRound,
   ChevronDown,
-  CheckCircle2,
   MessageCircle,
   MoreHorizontal,
   MessageSquareText,
@@ -704,15 +703,6 @@ export default function ProductReviews({
                         <p className="mt-1 text-sm font-medium">
                           {RATING_LABELS[review.rating]}
                         </p>
-                        {review.verifiedPurchase ? (
-                          <Badge
-                            variant="outline"
-                            className="mt-1.5 gap-1 border-secondary/30 bg-secondary/10 text-secondary"
-                          >
-                            <CheckCircle2 className="size-3.5" />
-                            Đã mua hàng
-                          </Badge>
-                        ) : null}
                       </div>
 
                       {canDeleteReview ? (

@@ -7,6 +7,11 @@ export type StockMovementType =
   | "TRANSFER_IN"
   | "TRANSFER_OUT";
 
+export type ManualAdjustmentType = Extract<
+  StockMovementType,
+  "ADJUSTMENT" | "DAMAGED_OUT"
+>;
+
 export type StockMovement = {
   id: string;
   variantId: string;
@@ -20,6 +25,7 @@ export type StockMovement = {
   warehouseName: string;
   type: StockMovementType;
   quantity: number;
+  delta: number;
   referenceType?: string | null;
   referenceId?: string | null;
   note?: string | null;
@@ -27,9 +33,11 @@ export type StockMovement = {
 };
 
 export type CreateStockAdjustmentInput = {
-  variantId: string;
+  productId: string;
+  variantId?: string;
   warehouseId: string;
   delta: number;
+  type?: ManualAdjustmentType;
   note?: string;
 };
 

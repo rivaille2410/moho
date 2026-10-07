@@ -23,9 +23,9 @@ interface PageBreadcrumbProps {
 
 export const PageBreadcrumb = ({ items }: PageBreadcrumbProps) => {
   return (
-    <div className="bg-muted/50 rounded-md py-2.5">
-      <Breadcrumb className="wrapper">
-        <BreadcrumbList>
+    <div className="bg-muted/50 rounded-md py-2.5 overflow-x-auto">
+      <Breadcrumb className="wrapper min-w-max">
+        <BreadcrumbList className="flex-nowrap whitespace-nowrap">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
             const isLoading = item.label === BREADCRUMB_LOADING;

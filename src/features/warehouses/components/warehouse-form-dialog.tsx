@@ -19,19 +19,14 @@ import {
   DialogContent,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import { SearchableSelect } from "@/components/shared/searchable-select";
 
 import {
   warehouseSchema,
@@ -136,7 +131,7 @@ export function WarehouseFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="md:min-w-xl">
+      <DialogContent className="md:min-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Chỉnh sửa kho hàng" : "Thêm kho hàng"}
@@ -225,39 +220,20 @@ export function WarehouseFormDialog({
                     control={form.control}
                     name="provinceCode"
                     render={({ field }) => (
-                      <Select
-                        value={field.value ? String(field.value) : ""}
+                      <SearchableSelect
+                        options={(provinces ?? []).map((p) => ({
+                          value: String(p.code),
+                          label: p.name,
+                        }))}
+                        value={field.value ? String(field.value) : undefined}
                         onValueChange={(value) => {
                           field.onChange(value ? Number(value) : undefined);
                           form.setValue("wardCode", undefined);
                         }}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {(value: string) => {
-                              if (!value) {
-                                return isLoadingProvinces
-                                  ? "Đang tải..."
-                                  : "Chọn tỉnh/thành";
-                              }
-                              return (
-                                provinces?.find((p) => String(p.code) === value)
-                                  ?.name ?? value
-                              );
-                            }}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {provinces?.map((province) => (
-                            <SelectItem
-                              key={province.code}
-                              value={String(province.code)}
-                            >
-                              {province.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        loading={isLoadingProvinces}
+                        placeholder="Chọn tỉnh/thành"
+                        searchPlaceholder="Tìm tỉnh/thành..."
+                      />
                     )}
                   />
                 </Field>
@@ -268,39 +244,20 @@ export function WarehouseFormDialog({
                     control={form.control}
                     name="wardCode"
                     render={({ field }) => (
-                      <Select
-                        value={field.value ? String(field.value) : ""}
+                      <SearchableSelect
+                        options={(wards ?? []).map((w) => ({
+                          value: String(w.code),
+                          label: w.name,
+                        }))}
+                        value={field.value ? String(field.value) : undefined}
                         onValueChange={(value) =>
                           field.onChange(value ? Number(value) : undefined)
                         }
+                        loading={isLoadingWards}
                         disabled={!provinceCode}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {(value: string) => {
-                              if (!value) {
-                                return isLoadingWards
-                                  ? "Đang tải..."
-                                  : "Chọn phường/xã";
-                              }
-                              return (
-                                wards?.find((w) => String(w.code) === value)
-                                  ?.name ?? value
-                              );
-                            }}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {wards?.map((ward) => (
-                            <SelectItem
-                              key={ward.code}
-                              value={String(ward.code)}
-                            >
-                              {ward.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="Chọn phường/xã"
+                        searchPlaceholder="Tìm phường/xã..."
+                      />
                     )}
                   />
                 </Field>

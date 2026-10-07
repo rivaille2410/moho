@@ -29,6 +29,9 @@ const DashboardProducts = () => {
   const [status, setStatus] = React.useState<ProductStatus | undefined>(
     undefined,
   );
+  const [categoryId, setCategoryId] = React.useState<string | undefined>(
+    undefined,
+  );
   const [outOfStock, setOutOfStock] = React.useState<boolean | undefined>(
     undefined,
   );
@@ -49,6 +52,7 @@ const DashboardProducts = () => {
     page,
     limit,
     status,
+    categoryId,
     search: debouncedSearch || undefined,
     outOfStock,
   });
@@ -80,6 +84,11 @@ const DashboardProducts = () => {
 
   const handleStatusChange = (value: ProductStatus | undefined) => {
     setStatus(value);
+    setPage(1);
+  };
+
+  const handleCategoryChange = (value: string | undefined) => {
+    setCategoryId(value);
     setPage(1);
   };
 
@@ -142,15 +151,15 @@ const DashboardProducts = () => {
                     table={table}
                     search={search}
                     status={status}
+                    categoryId={categoryId}
                     outOfStock={outOfStock}
                     onStatusChange={handleStatusChange}
                     onSearchChange={handleSearchChange}
+                    onCategoryChange={handleCategoryChange}
                     onOutOfStockChange={handleOutOfStockChange}
                     onBulkDelete={(products) =>
                       setProductsToBulkDelete(products)
                     }
-                    categoryId={undefined}
-                    onCategoryChange={() => {}}
                   />
                 );
               }}
