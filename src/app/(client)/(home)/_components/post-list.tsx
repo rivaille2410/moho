@@ -3,17 +3,20 @@
 import { useCallback, useMemo } from "react";
 
 import { PostGrid } from "./post-grid";
+import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
 
 import { useGridColumns } from "@/hooks/use-grid-columns";
 import {
   usePublicPostsInfinite,
   type QueryPublicPostsParams,
 } from "@/features/posts/hooks/use-public-posts";
+import type { PostsResponse } from "@/types/post";
 
 interface PostListProps {
   title?: string;
   seeMoreHref?: string;
   params?: Omit<QueryPublicPostsParams, "page">;
+  initialPage?: PostsResponse;
 }
 
 const DEFAULT_LIMIT = 18;
@@ -22,6 +25,7 @@ export default function PostList({
   title = "Bài viết",
   seeMoreHref,
   params,
+  initialPage,
 }: PostListProps) {
   const columns = useGridColumns();
 
@@ -35,11 +39,14 @@ export default function PostList({
   const {
     data,
     isLoading,
-    isError,
+    isLoadingError,
+    isFetchNextPageError,
+    isFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePublicPostsInfinite(queryParams);
+    refetch,
+  } = usePublicPostsInfinite(queryParams, initialPage);
 
   const handleLoadMore = useCallback(() => {
     fetchNextPage();
@@ -50,7 +57,17 @@ export default function PostList({
     [data],
   );
 
-  if (isError) return null;
+  if (isLoadingError) {
+    return (
+      <div className="wrapper">
+        <PublicApiErrorState
+          compact
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="wrapper pb-12">
@@ -63,6 +80,13 @@ export default function PostList({
         onLoadMore={handleLoadMore}
         isLoadingMore={isFetchingNextPage}
       />
+      {isFetchNextPageError && (
+        <PublicApiErrorState
+          compact
+          onRetry={() => void fetchNextPage()}
+          isRetrying={isFetchingNextPage}
+        />
+      )}
     </div>
   );
 }

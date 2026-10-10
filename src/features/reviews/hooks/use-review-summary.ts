@@ -1,17 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-
-import { ReviewRatingSummary } from "@/types/review";
-
-async function fetchReviewSummary(slug: string) {
-  const res = await fetch(`/api/public/products/${slug}/reviews/summary`);
-  if (!res.ok) throw new Error("Không thể tải thống kê đánh giá");
-  return res.json() as Promise<ReviewRatingSummary>;
-}
+import { reviewsApi } from "@/features/reviews/api/reviews-api";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 export function useReviewSummary(slug: string) {
   return useQuery({
     queryKey: ["review-summary", slug],
-    queryFn: () => fetchReviewSummary(slug),
+    queryFn: ({ signal }) => reviewsApi.summary(slug, { signal }),
     enabled: !!slug,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 }

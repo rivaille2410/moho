@@ -1,19 +1,13 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { proxyPublicApiGet } from "@/lib/public-api";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/public/posts/${slug}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    },
+  return proxyPublicApiGet(
+    request,
+    `/public/posts/${encodeURIComponent(slug)}`,
   );
-
-  const data = await res.json().catch(() => null);
-  return NextResponse.json(data, { status: res.status });
 }

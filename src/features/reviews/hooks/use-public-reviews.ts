@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Review } from "@/types/review";
-import { PaginationMeta } from "@/types/shared";
+import { reviewsApi } from "@/features/reviews/api/reviews-api";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 interface UsePublicReviewsParams {
   slug: string;
@@ -11,25 +14,23 @@ interface UsePublicReviewsParams {
   limit?: number;
 }
 
-async function fetchPublicReviews({ slug, ...params }: UsePublicReviewsParams) {
-  const search = new URLSearchParams();
-  if (params.rating) search.set("rating", String(params.rating));
-  if (params.hasImages) search.set("hasImages", String(params.hasImages));
-  if (params.sort) search.set("sort", params.sort);
-  if (params.page) search.set("page", String(params.page));
-  if (params.limit) search.set("limit", String(params.limit));
-
-  const res = await fetch(
-    `/api/public/products/${slug}/reviews?${search.toString()}`,
-  );
-  if (!res.ok) throw new Error("Không thể tải đánh giá");
-  return res.json() as Promise<{ data: Review[]; meta: PaginationMeta }>;
-}
-
 export function usePublicReviews(params: UsePublicReviewsParams) {
   return useQuery({
     queryKey: ["public-reviews", params],
-    queryFn: () => fetchPublicReviews(params),
+    queryFn: ({ signal }) =>
+      reviewsApi.publicList(
+        params.slug,
+        {
+          rating: params.rating,
+          hasImages: params.hasImages,
+          sort: params.sort,
+          page: params.page,
+          limit: params.limit,
+        },
+        { signal },
+      ),
     enabled: !!params.slug,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 }

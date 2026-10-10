@@ -52,12 +52,7 @@ const banners = [
     desktop: "/banner/banner-8.webp",
     mobile: "/banner/banner-mobile-8.webp",
     alt: "Banner 8",
-  },
-  {
-    desktop: "/banner/banner-9.webp",
-    mobile: "/banner/banner-mobile-9.webp",
-    alt: "Banner 9",
-  },
+  }
 ];
 
 const Banner = () => {

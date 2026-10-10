@@ -9,13 +9,21 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code?: string;
   readonly errors?: Record<string, string[]>;
+  readonly retryAfterMs?: number;
 
-  constructor(status: number, message: string, code?: string, errors?: Record<string, string[]>) {
+  constructor(
+    status: number,
+    message: string,
+    code?: string,
+    errors?: Record<string, string[]>,
+    retryAfterMs?: number,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.errors = errors;
+    this.retryAfterMs = retryAfterMs;
 
     // Maintains proper stack trace for where error was thrown
     if (Error.captureStackTrace) {

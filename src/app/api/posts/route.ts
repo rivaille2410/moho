@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { fetchWithAuth } from "@/lib/auth-fetch";
+import { revalidatePublicPosts } from "@/features/posts/api/revalidate-public-posts";
 
 export async function GET(request: NextRequest) {
   const { search } = new URL(request.url);
@@ -29,5 +30,6 @@ export async function POST(req: NextRequest) {
   }
 
   const data = await res.json().catch(() => null);
+  if (res.ok) revalidatePublicPosts();
   return NextResponse.json(data, { status: res.status });
 }

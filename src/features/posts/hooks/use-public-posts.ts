@@ -1,49 +1,31 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { postsApi } from "@/features/posts/api/posts-api";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 import { PostsResponse, QueryPostsParams } from "@/types/post";
 
 export type QueryPublicPostsParams = Omit<QueryPostsParams, "status">;
 
-async function fetchPublicPosts(
-  params: QueryPublicPostsParams,
-): Promise<PostsResponse> {
-  const searchParams = new URLSearchParams();
-
-  if (params.page) searchParams.set("page", String(params.page));
-  if (params.limit) searchParams.set("limit", String(params.limit));
-  if (params.search) searchParams.set("search", params.search);
-  if (params.sortBy) searchParams.set("sortBy", params.sortBy);
-
-  const query = searchParams.toString();
-  const res = await fetch(`/api/public/posts${query ? `?${query}` : ""}`, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch posts");
-  }
-
-  return res.json();
-}
-
-export const usePublicPosts = (params: QueryPublicPostsParams = {}) => {
-  return useQuery({
-    queryKey: ["public-posts", params],
-    queryFn: () => fetchPublicPosts(params),
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
 export const usePublicPostsInfinite = (
   params: Omit<QueryPublicPostsParams, "page"> = { limit: 12 },
+  initialPage?: PostsResponse,
 ) => {
   return useInfiniteQuery({
     queryKey: ["public-posts-infinite", params],
-    queryFn: ({ pageParam }) =>
-      fetchPublicPosts({ ...params, page: pageParam }),
+    queryFn: ({ pageParam, signal }) =>
+      postsApi.publicList({ ...params, page: pageParam }, { signal }),
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
     initialPageParam: 1,
+    initialData: initialPage
+      ? { pages: [initialPage], pageParams: [1] }
+      : undefined,
     staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 };

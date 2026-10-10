@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { getBackendApiBaseUrl, withBackendTimeout } from "@/lib/backend-api";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -15,11 +14,14 @@ interface Tokens {
 }
 
 async function refreshTokens(refreshToken: string): Promise<Tokens | null> {
-  const res = await fetch(`${API_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
+  const res = await fetch(
+    `${getBackendApiBaseUrl()}/auth/refresh`,
+    withBackendTimeout({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    }),
+  );
 
   if (!res.ok) return null;
 
@@ -39,13 +41,16 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
   }
 
   const callBackend = (token: string) =>
-    fetch(`${API_URL}${path}`, {
-      ...init,
-      headers: {
-        ...(init.headers ?? {}),
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    fetch(
+      `${getBackendApiBaseUrl()}${path}`,
+      withBackendTimeout({
+        ...init,
+        headers: {
+          ...(init.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    );
 
   if (accessToken) {
     const res = await callBackend(accessToken);
@@ -78,13 +83,16 @@ export async function fetchOptionalAuth(path: string, init: RequestInit = {}) {
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
   const callBackend = (token?: string) =>
-    fetch(`${API_URL}${path}`, {
-      ...init,
-      headers: {
-        ...(init.headers ?? {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    fetch(
+      `${getBackendApiBaseUrl()}${path}`,
+      withBackendTimeout({
+        ...init,
+        headers: {
+          ...(init.headers ?? {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }),
+    );
 
   if (!accessToken && !refreshToken) {
     return callBackend();

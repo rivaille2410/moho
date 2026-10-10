@@ -1,33 +1,50 @@
 "use client";
 
 import { ProductGrid } from "./product-grid";
+import type { ProductsResponse } from "@/types/product";
+import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
 
 import {
-  QueryBestSellerProductsParams,
-  usePublicBestSellerProductsInfinite,
-} from "@/features/products/hooks/use-best-seller-products";
+  usePublicBestSellersInfinite,
+  type QueryPublicProductsParams,
+} from "@/features/products/hooks/use-public-products";
 
 interface BestSellerListProps {
   title?: string;
   seeMoreHref?: string;
-  params?: Omit<QueryBestSellerProductsParams, "page">;
+  params?: Omit<QueryPublicProductsParams, "page">;
+  initialPage?: ProductsResponse;
 }
 
 export default function BestSellerList({
   title = "Sản phẩm bán chạy",
   seeMoreHref,
   params = { limit: 12 },
+  initialPage,
 }: BestSellerListProps) {
   const {
     data,
     isLoading,
-    isError,
+    isLoadingError,
+    isFetchNextPageError,
+    isFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePublicBestSellerProductsInfinite(params);
+    refetch,
+  } = usePublicBestSellersInfinite(params, initialPage);
 
-  if (isError) return null;
+  if (isLoadingError) {
+    return (
+      <div className="wrapper">
+        <PublicApiErrorState
+          compact
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   const products = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -42,6 +59,13 @@ export default function BestSellerList({
         onLoadMore={() => fetchNextPage()}
         isLoadingMore={isFetchingNextPage}
       />
+      {isFetchNextPageError && (
+        <PublicApiErrorState
+          compact
+          onRetry={() => void fetchNextPage()}
+          isRetrying={isFetchingNextPage}
+        />
+      )}
     </div>
   );
 }

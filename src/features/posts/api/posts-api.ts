@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { Post, PostsResponse, QueryPostsParams } from "@/types/post";
+import type { RequestOptions } from "@/lib/api-client";
 
 export const postsApi = {
   list(params: QueryPostsParams = {}) {
@@ -37,13 +38,22 @@ export const postsApi = {
     return apiClient.delete<void>("/api/posts/bulk", { ids });
   },
 
-  publicList(params?: Record<string, unknown>) {
+  publicList(
+    params: QueryPostsParams = {},
+    options?: Pick<RequestOptions, "signal">,
+  ) {
     return apiClient.get<PostsResponse>("/api/public/posts", {
-      params: params as Record<string, string | number | boolean>,
+      params: {
+        page: params.page,
+        limit: params.limit,
+        search: params.search,
+        sortBy: params.sortBy,
+      },
+      ...options,
     });
   },
 
-  publicDetail(slug: string) {
-    return apiClient.get<Post>(`/api/public/posts/${slug}`);
+  publicDetail(slug: string, options?: Pick<RequestOptions, "signal">) {
+    return apiClient.get<Post>(`/api/public/posts/${encodeURIComponent(slug)}`, options);
   },
 };
