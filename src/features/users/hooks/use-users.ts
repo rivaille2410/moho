@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { usersApi } from "../api/users-api";
+import { queryKeys } from "@/lib/query-keys";
+import { PaginationMeta } from "@/types/shared";
 
 export interface UserListItem {
   id: string;
@@ -9,15 +12,6 @@ export interface UserListItem {
   avatar: string | null;
   emailVerified: boolean;
   bannedAt: string | null;
-}
-
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
 }
 
 export interface UsersResponse {
@@ -34,36 +28,10 @@ export interface QueryUsersParams {
   banned?: boolean;
 }
 
-async function fetchUsers(params: QueryUsersParams): Promise<UsersResponse> {
-  const searchParams = new URLSearchParams();
-
-  if (params.page) searchParams.set("page", String(params.page));
-  if (params.limit) searchParams.set("limit", String(params.limit));
-  if (params.search) searchParams.set("search", params.search);
-  if (params.role) searchParams.set("role", params.role);
-  if (params.emailVerified !== undefined) {
-    searchParams.set("emailVerified", String(params.emailVerified));
-  }
-  if (params.banned !== undefined) {
-    searchParams.set("banned", String(params.banned));
-  }
-
-  const query = searchParams.toString();
-  const res = await fetch(`/api/users${query ? `?${query}` : ""}`, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch users");
-  }
-
-  return res.json();
-}
-
 export const useUsers = (params: QueryUsersParams = {}) => {
-  return useQuery({
-    queryKey: ["users", params],
-    queryFn: () => fetchUsers(params),
+  return useQuery<UsersResponse>({
+    queryKey: queryKeys.users.list(params),
+    queryFn: () => usersApi.list(params),
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -1,33 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { toast } from "@/components/ui/toast";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  CATEGORY_HAS_CHILDREN: "Không thể xoá vì danh mục này còn danh mục con.",
-  CATEGORY_HAS_PRODUCTS: "Không thể xoá vì danh mục này vẫn còn sản phẩm.",
-};
-
-async function deleteCategory(id: string): Promise<void> {
-  const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    const message =
-      (error?.code && ERROR_MESSAGES[error.code]) ??
-      error?.message ??
-      "Không thể xoá danh mục";
-    throw new Error(message);
-  }
-}
+import { categoriesApi } from "../api/categories-api";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useDeleteCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteCategory,
+    mutationFn: (id: string) => categoriesApi.delete(id),
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã xoá danh mục" });
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
     },
     onError: (error: Error) => {
       toast.add({

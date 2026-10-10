@@ -83,7 +83,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const descRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
 
-  const autoplayPlugin = useRef(
+  const [autoplay] = useState(() =>
     Autoplay({ delay: 4000, stopOnInteraction: true }),
   );
 
@@ -110,10 +110,11 @@ export default function ProductPage({ params }: ProductPageProps) {
     [images, product?.name],
   );
 
+  const rawDescription = product?.description;
   const sanitizedDescription = useMemo(() => {
-    if (!product?.description) return null;
-    return DOMPurify.sanitize(product.description);
-  }, [product?.description]);
+    if (!rawDescription) return null;
+    return DOMPurify.sanitize(rawDescription);
+  }, [rawDescription]);
 
   const handleThumbnailClick = useCallback(
     (index: number) => {
@@ -124,9 +125,9 @@ export default function ProductPage({ params }: ProductPageProps) {
   );
 
   const openLightbox = useCallback(() => {
-    autoplayPlugin.current.stop();
+    autoplay.stop();
     setIsLightboxOpen(true);
-  }, []);
+  }, [autoplay]);
 
   const handleLightboxView = useCallback(
     (index: number) => {
@@ -279,7 +280,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
               <Carousel
                 setApi={setCarouselApi}
-                plugins={[autoplayPlugin.current]}
+                plugins={[autoplay]}
                 className="min-w-0"
                 opts={{ loop: true }}
               >

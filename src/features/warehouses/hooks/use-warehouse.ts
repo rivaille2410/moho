@@ -1,22 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-
+import { warehousesApi } from "../api/warehouses-api";
+import { queryKeys } from "@/lib/query-keys";
 import { Warehouse } from "@/types/warehouse";
 
-async function fetchWarehouse(id: string): Promise<Warehouse> {
-  const res = await fetch(`/api/warehouses/${id}`);
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new Error(data?.message ?? "Không thể tải kho hàng");
-  }
-
-  return res.json();
-}
-
-export function useWarehouse(id: string) {
-  return useQuery({
-    queryKey: ["warehouses", id],
-    queryFn: () => fetchWarehouse(id),
+export function useWarehouse(id: string | undefined) {
+  return useQuery<Warehouse>({
+    queryKey: queryKeys.warehouses.detail(id ?? ""),
+    queryFn: () => warehousesApi.get(id as string),
     enabled: !!id,
   });
 }

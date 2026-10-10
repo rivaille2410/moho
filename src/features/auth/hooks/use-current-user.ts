@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { authApi } from "../api/auth-api";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface CurrentUser {
   id: string;
@@ -9,15 +11,13 @@ export interface CurrentUser {
 }
 
 export async function fetchMe(): Promise<CurrentUser | null> {
-  const res = await fetch("/api/auth/me", { method: "POST" });
-  if (!res.ok) return null;
-  return res.json();
+  return authApi.getMe();
 }
 
 export const useCurrentUser = () => {
-  return useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
+  return useQuery<CurrentUser | null>({
+    queryKey: queryKeys.auth.me(),
+    queryFn: () => authApi.getMe(),
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

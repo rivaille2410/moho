@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Review, PaginationMeta } from "@/types/review";
+import { Review } from "@/types/review";
+import { PaginationMeta } from "@/types/shared";
 
 interface UsePublicReviewsParams {
   slug: string;

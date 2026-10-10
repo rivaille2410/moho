@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Review } from "@/types/review";
 import { formatRelativeTimeVi } from "@/lib/format-relative-time";
@@ -71,7 +71,7 @@ export function ProductReviewsContainer({
     return [...allReviews, ...newOnes];
   }, [data, page, allReviews]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (data?.data && page === 1) {
       setAllReviews(data.data);
     } else if (data?.data && page > 1) {
@@ -81,7 +81,7 @@ export function ProductReviewsContainer({
         return [...prev, ...newOnes];
       });
     }
-  }, [data]);
+  }, [data, page]);
 
   const reviews: ProductReview[] = useMemo(
     () => mergedReviews.map(mapReview),

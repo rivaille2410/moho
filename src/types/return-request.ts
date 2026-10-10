@@ -76,14 +76,7 @@ export type MyReturnRequestListItem = {
   createdAt: string;
 };
 
-export type PaginationMeta = {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-};
+import { PaginationMeta } from "./shared";
 
 export type PaginatedReturnRequests = {
   data: ReturnRequest[];

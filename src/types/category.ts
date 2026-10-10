@@ -35,9 +35,11 @@ export type CreateCategoryInput = {
   parentId?: string;
 };
 
+export type UpdateCategoryInput = Partial<CreateCategoryInput>;
+
 export type UpdateCategoryArgs = {
   id: string;
-  input: Partial<CreateCategoryInput>;
+  input: UpdateCategoryInput;
 };
 
 export type BulkDeleteCategoriesResponse = {

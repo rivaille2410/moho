@@ -1,46 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-
-interface BulkDeleteResponse {
-  deletedCount: number;
-}
-
-const ERROR_MESSAGES: Record<string, string> = {
-  SUPPLIER_HAS_OPEN_PURCHASE_ORDERS:
-    "Một số nhà cung cấp đang có đơn nhập hàng chưa hoàn tất.",
-};
-
-async function bulkDeleteSuppliers(ids: string[]): Promise<BulkDeleteResponse> {
-  const res = await fetch("/api/suppliers/bulk-delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    const message =
-      (error?.code && ERROR_MESSAGES[error.code]) ??
-      error?.message ??
-      "Không thể xoá nhà cung cấp";
-    throw new Error(message);
-  }
-
-  return res.json();
-}
+import { queryKeys } from "@/lib/query-keys";
+import { suppliersApi } from "../api/suppliers-api";
 
 export function useBulkDeleteSuppliers() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: bulkDeleteSuppliers,
-    onSuccess: (data) => {
+    mutationFn: (ids: string[]) => suppliersApi.bulkDelete(ids),
+    onSuccess: () => {
       toast.add({
         type: "success",
-        description: `Đã xoá ${data.deletedCount} nhà cung cấp`,
+        description: "Xoá nhà cung cấp thành công.",
       });
-      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },
     onError: (error: Error) => {
       toast.add({

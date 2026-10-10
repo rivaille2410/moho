@@ -1,21 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-
-import { Order } from "@/types/order";
-
-async function getMyOrder(id: string): Promise<Order> {
-  const res = await fetch(`/api/orders/me/${id}`);
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message ?? "Không thể tải thông tin đơn hàng");
-  }
-  return data;
-}
+import { ordersApi } from "../api/orders-api";
+import { queryKeys } from "@/lib/query-keys";
+import { OrderDetail } from "@/types/order";
 
 export function useMyOrder(id: string | undefined) {
-  return useQuery({
-    queryKey: ["my-order", id],
-    queryFn: () => getMyOrder(id as string),
+  return useQuery<OrderDetail>({
+    queryKey: queryKeys.orders.myDetail(id ?? ""),
+    queryFn: () => ordersApi.myOrder(id as string),
     enabled: !!id,
   });
 }

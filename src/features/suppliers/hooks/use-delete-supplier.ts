@@ -1,32 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  SUPPLIER_HAS_PURCHASE_ORDERS:
-    "Không thể xoá vì nhà cung cấp còn đơn nhập hàng.",
-};
-
-async function deleteSupplier(id: string): Promise<void> {
-  const res = await fetch(`/api/suppliers/${id}`, { method: "DELETE" });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    const message =
-      (data?.code && ERROR_MESSAGES[data.code]) ??
-      data?.message ??
-      "Không thể xoá nhà cung cấp";
-    throw new Error(message);
-  }
-}
+import { queryKeys } from "@/lib/query-keys";
+import { suppliersApi } from "../api/suppliers-api";
 
 export function useDeleteSupplier() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteSupplier,
+    mutationFn: (id: string) => suppliersApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
       toast.add({
         type: "success",
         description: "Xoá nhà cung cấp thành công.",
