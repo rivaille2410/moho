@@ -1,31 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-import { CreateWarehouseInput, Warehouse } from "@/types/warehouse";
-
-async function createWarehouse(
-  input: CreateWarehouseInput,
-): Promise<Warehouse> {
-  const res = await fetch("/api/warehouses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message ?? "Không thể tạo kho hàng");
-  }
-  return data;
-}
+import { queryKeys } from "@/lib/query-keys";
+import { CreateWarehouseInput } from "@/types/warehouse";
+import { warehousesApi } from "../api/warehouses-api";
 
 export function useCreateWarehouse() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createWarehouse,
+    mutationFn: (input: CreateWarehouseInput) => warehousesApi.create(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.all });
       toast.add({
         type: "success",
         description: "Tạo kho hàng thành công.",

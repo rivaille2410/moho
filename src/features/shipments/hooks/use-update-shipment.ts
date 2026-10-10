@@ -1,37 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-import { Shipment, UpdateShipmentInput } from "@/types/shipment";
-
-async function updateShipment({
-  id,
-  input,
-}: {
-  id: string;
-  input: UpdateShipmentInput;
-}): Promise<Shipment> {
-  const res = await fetch(`/api/shipments/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message ?? "Không thể cập nhật vận đơn");
-  }
-  return data;
-}
+import { queryKeys } from "@/lib/query-keys";
+import { UpdateShipmentInput } from "@/types/shipment";
+import { shipmentsApi } from "../api/shipments-api";
 
 export function useUpdateShipment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updateShipment,
+    mutationFn: ({ id, input }: { id: string; input: UpdateShipmentInput }) =>
+      shipmentsApi.update(id, input),
     onSuccess: (_data, { id }) => {
       toast.add({ type: "success", description: "Đã cập nhật vận đơn" });
-      queryClient.invalidateQueries({ queryKey: ["shipments"] });
-      queryClient.invalidateQueries({ queryKey: ["shipments", id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.shipments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(id) });
     },
     onError: (error: Error) => {
       toast.add({

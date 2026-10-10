@@ -47,14 +47,7 @@ export type ProductListItem = {
   updatedAt: string;
 };
 
-export type PaginationMeta = {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-};
+import { PaginationMeta } from "./shared";
 
 export type ProductsResponse = {
   data: ProductListItem[];
@@ -156,6 +149,8 @@ export type UpdateProductPayload = {
   status?: ProductStatus;
   materials?: { label: string; value: string; sortOrder?: number }[];
 };
+
+export type UpdateProductInput = UpdateProductPayload;
 
 export type UpdateProductArgs = {
   id: string;

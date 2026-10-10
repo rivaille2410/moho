@@ -1,21 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-
+import { notificationsApi } from "../api/notifications-api";
+import { queryKeys } from "@/lib/query-keys";
 import { NotificationsResponse } from "@/types/notification";
 
-async function fetchNotifications(): Promise<NotificationsResponse> {
-  const res = await fetch("/api/notifications", { method: "GET" });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch notifications");
-  }
-
-  return res.json();
-}
-
 export const useNotifications = () => {
-  return useQuery({
-    queryKey: ["notifications"],
-    queryFn: fetchNotifications,
+  return useQuery<NotificationsResponse>({
+    queryKey: queryKeys.notifications.list(),
+    queryFn: () => notificationsApi.list(),
     staleTime: 30 * 1000,
   });
 };

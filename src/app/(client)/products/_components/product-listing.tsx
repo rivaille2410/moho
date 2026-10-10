@@ -29,10 +29,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   usePublicColors,
-  usePublicCategories,
   usePublicProductsInfinite,
   usePublicBestSellersInfinite,
 } from "@/features/products/hooks/use-public-products";
+import { usePublicCategories } from "@/features/categories/hooks/use-public-categories";
 import { useGridColumns } from "@/hooks/use-grid-columns";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";

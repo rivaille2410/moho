@@ -96,9 +96,12 @@ export type CreateOrderInput = {
   items: CreateOrderItemInput[];
 };
 
+export type OrderDetail = Order;
+
 export type UpdateOrderStatusInput = {
   status: OrderStatus;
   cancelReason?: string;
+  reason?: string;
 };
 
 export type QueryOrdersParams = {
@@ -110,14 +113,7 @@ export type QueryOrdersParams = {
   search?: string;
 };
 
-export type PaginationMeta = {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-};
+import { PaginationMeta } from "./shared";
 
 export type OrdersListResponse = {
   data: Order[];

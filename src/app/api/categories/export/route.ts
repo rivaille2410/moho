@@ -1,29 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-
-import { fetchWithAuth } from "@/lib/auth-fetch";
+import { type NextRequest } from "next/server";
+import { proxyBackend } from "@/lib/api-proxy";
 
 export async function GET(request: NextRequest) {
-  const { search } = new URL(request.url);
-
-  const { res, unauthorized } = await fetchWithAuth(
-    `/categories/export${search}`,
-  );
-
-  if (unauthorized || !res) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!res.ok) {
-    return new Response(await res.text(), { status: res.status });
-  }
-
-  return new Response(res.body, {
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition":
-        res.headers.get("Content-Disposition") ??
-        "attachment; filename=categories.xlsx",
-    },
-  });
+  return proxyBackend("/categories/export", request);
 }

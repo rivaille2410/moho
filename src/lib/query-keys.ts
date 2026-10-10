@@ -1,0 +1,121 @@
+export const queryKeys = {
+  auth: {
+    all: ["auth"] as const,
+    me: () => [...queryKeys.auth.all, "me"] as const,
+  },
+  products: {
+    all: ["products"] as const,
+    lists: () => [...queryKeys.products.all, "list"] as const,
+    list: (params?: unknown) => [...queryKeys.products.lists(), params] as const,
+    infinite: (params?: unknown) => [...queryKeys.products.all, "infinite", params] as const,
+    details: () => [...queryKeys.products.all, "detail"] as const,
+    detail: (id: string) => [...queryKeys.products.details(), id] as const,
+    slugs: (ids?: string[]) => [...queryKeys.products.all, "slugs", ids] as const,
+    publicDetail: (slug: string) => [...queryKeys.products.all, "public", slug] as const,
+    variants: (productId: string) => [...queryKeys.products.detail(productId), "variants"] as const,
+    bestSellers: () => [...queryKeys.products.all, "best-sellers"] as const,
+    related: (productId: string) => [...queryKeys.products.detail(productId), "related"] as const,
+  },
+  categories: {
+    all: ["categories"] as const,
+    lists: () => [...queryKeys.categories.all, "list"] as const,
+    list: (params?: unknown) => [...queryKeys.categories.all, params] as const,
+    detail: (id: string) => [...queryKeys.categories.all, "detail", id] as const,
+  },
+  orders: {
+    all: ["orders"] as const,
+    lists: () => [...queryKeys.orders.all, "list"] as const,
+    list: (params?: unknown) => [...queryKeys.orders.all, params] as const,
+    myOrders: (params?: unknown) => [...queryKeys.orders.all, "me", params] as const,
+    detail: (id: string) => [...queryKeys.orders.all, "detail", id] as const,
+    myDetail: (id: string) => [...queryKeys.orders.all, "me", id] as const,
+  },
+  cart: {
+    all: ["cart"] as const,
+    view: () => [...queryKeys.cart.all, "view"] as const,
+  },
+  users: {
+    all: ["users"] as const,
+    list: (params?: unknown) => [...queryKeys.users.all, params] as const,
+    detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
+  },
+  vouchers: {
+    all: ["vouchers"] as const,
+    list: (params?: unknown) => [...queryKeys.vouchers.all, params] as const,
+    detail: (id: string) => [...queryKeys.vouchers.all, "detail", id] as const,
+    validate: (code: string) => [...queryKeys.vouchers.all, "validate", code] as const,
+  },
+  reviews: {
+    all: ["reviews"] as const,
+    list: (params?: unknown) => [...queryKeys.reviews.all, params] as const,
+    detail: (id: string) => [...queryKeys.reviews.all, "detail", id] as const,
+    productReviews: (productSlug: string, params?: unknown) =>
+      [...queryKeys.reviews.all, "product", productSlug, params] as const,
+    productSummary: (productSlug: string) =>
+      [...queryKeys.reviews.all, "product-summary", productSlug] as const,
+  },
+  comments: {
+    all: ["comments"] as const,
+    reviewComments: (reviewId: string) => [...queryKeys.comments.all, "review", reviewId] as const,
+  },
+  posts: {
+    all: ["posts"] as const,
+    list: (params?: unknown) => [...queryKeys.posts.all, params] as const,
+    infinite: (params?: unknown) => [...queryKeys.posts.all, "infinite", params] as const,
+    detail: (id: string) => [...queryKeys.posts.all, "detail", id] as const,
+    publicDetail: (slug: string) => [...queryKeys.posts.all, "public", slug] as const,
+    related: (slug: string) => [...queryKeys.posts.all, "related", slug] as const,
+  },
+  shipments: {
+    all: ["shipments"] as const,
+    list: (params?: unknown) => [...queryKeys.shipments.all, params] as const,
+    detail: (id: string) => [...queryKeys.shipments.all, "detail", id] as const,
+    shippableOrders: () => [...queryKeys.shipments.all, "shippable-orders"] as const,
+  },
+  warehouses: {
+    all: ["warehouses"] as const,
+    list: (params?: unknown) => [...queryKeys.warehouses.all, params] as const,
+    detail: (id: string) => [...queryKeys.warehouses.all, "detail", id] as const,
+  },
+  suppliers: {
+    all: ["suppliers"] as const,
+    list: (params?: unknown) => [...queryKeys.suppliers.all, params] as const,
+    detail: (id: string) => [...queryKeys.suppliers.all, "detail", id] as const,
+  },
+  purchaseOrders: {
+    all: ["purchase-orders"] as const,
+    list: (params?: unknown) => [...queryKeys.purchaseOrders.all, params] as const,
+    detail: (id: string) => [...queryKeys.purchaseOrders.all, "detail", id] as const,
+  },
+  stockMovements: {
+    all: ["stock-movements"] as const,
+    list: (params?: unknown) => [...queryKeys.stockMovements.all, params] as const,
+  },
+  returnRequests: {
+    all: ["return-requests"] as const,
+    list: (params?: unknown) => [...queryKeys.returnRequests.all, params] as const,
+    detail: (id: string) => [...queryKeys.returnRequests.all, "detail", id] as const,
+  },
+  addresses: {
+    all: ["addresses"] as const,
+    list: () => [...queryKeys.addresses.all, "list"] as const,
+    provinces: () => [...queryKeys.addresses.all, "provinces"] as const,
+    districts: (provinceCode: number) => [...queryKeys.addresses.all, "districts", provinceCode] as const,
+    wards: (districtCode: number) => [...queryKeys.addresses.all, "wards", districtCode] as const,
+  },
+  notifications: {
+    all: ["notifications"] as const,
+    list: () => [...queryKeys.notifications.all, "list"] as const,
+    unreadCount: () => [...queryKeys.notifications.all, "unread-count"] as const,
+  },
+  dashboard: {
+    all: ["dashboard"] as const,
+    kpi: (params?: unknown) => [...queryKeys.dashboard.all, "kpi", params] as const,
+    revenueChart: (params?: unknown) => [...queryKeys.dashboard.all, "revenue-chart", params] as const,
+    ordersChart: (params?: unknown) => [...queryKeys.dashboard.all, "orders-chart", params] as const,
+    orderStatusChart: (params?: unknown) => [...queryKeys.dashboard.all, "order-status-chart", params] as const,
+    topProducts: (params?: unknown) => [...queryKeys.dashboard.all, "top-products", params] as const,
+    topCustomers: (params?: unknown) => [...queryKeys.dashboard.all, "top-customers", params] as const,
+    lowStock: () => [...queryKeys.dashboard.all, "low-stock"] as const,
+  },
+};

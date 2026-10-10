@@ -1,20 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-
-import { fetchWithAuth } from "@/lib/auth-fetch";
+import { NextRequest } from "next/server";
+import { proxyBackend } from "@/lib/api-proxy";
 
 export async function DELETE(req: NextRequest) {
-  const body = await req.json();
-
-  const { res, unauthorized } = await fetchWithAuth("/vouchers/bulk", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (unauthorized || !res) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const data = await res.json().catch(() => null);
-  return NextResponse.json(data, { status: res.status });
+  return proxyBackend("/vouchers/bulk", req);
 }

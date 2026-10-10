@@ -46,14 +46,7 @@ export interface VoucherListItem {
   createdAt: string;
 }
 
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
+import { PaginationMeta } from "./shared";
 
 export interface PaginatedVouchers {
   data: VoucherListItem[];
@@ -87,7 +80,10 @@ export interface CreateVoucherPayload {
   isPublic?: boolean;
 }
 
+export type CreateVoucherInput = CreateVoucherPayload;
+
 export type UpdateVoucherPayload = Partial<Omit<CreateVoucherPayload, "code">>;
+export type UpdateVoucherInput = UpdateVoucherPayload;
 
 export interface UpdateVoucherStatusPayload {
   status: VoucherStatus;

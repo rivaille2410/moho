@@ -1,21 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-
+import { vouchersApi } from "../api/vouchers-api";
+import { queryKeys } from "@/lib/query-keys";
 import { Voucher } from "@/types/voucher";
 
-async function fetchVoucher(id: string): Promise<Voucher> {
-  const res = await fetch(`/api/vouchers/${id}`);
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data?.message ?? "Không thể tải thông tin voucher");
-  }
-  return data;
-}
-
 export function useVoucher(id: string | undefined) {
-  return useQuery({
-    queryKey: ["vouchers", id],
-    queryFn: () => fetchVoucher(id as string),
+  return useQuery<Voucher>({
+    queryKey: queryKeys.vouchers.detail(id ?? ""),
+    queryFn: () => vouchersApi.get(id as string),
     enabled: !!id,
   });
 }

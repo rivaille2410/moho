@@ -1,10 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-import {
-  ValidateVoucherPayload,
-  VoucherValidationResult,
-} from "@/types/voucher";
+import { ApiError } from "@/lib/api-error";
+import { ValidateVoucherPayload, VoucherValidationResult } from "@/types/voucher";
+import { vouchersApi } from "../api/vouchers-api";
 
 const ERROR_MESSAGES: Record<string, string> = {
   VOUCHER_NOT_ACTIVE: "Voucher hiện không hoạt động.",
@@ -15,33 +14,17 @@ const ERROR_MESSAGES: Record<string, string> = {
   VOUCHER_NOT_APPLICABLE: "Voucher không áp dụng cho sản phẩm trong giỏ hàng.",
 };
 
-async function validateVoucher(
-  input: ValidateVoucherPayload,
-): Promise<VoucherValidationResult> {
-  const res = await fetch("/api/vouchers/validate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    const message =
-      (data?.code && ERROR_MESSAGES[data.code]) ??
-      data?.message ??
-      "Mã giảm giá không hợp lệ";
-    throw new Error(message);
-  }
-  return data;
-}
-
 export function useValidateVoucher() {
-  return useMutation({
-    mutationFn: validateVoucher,
-    onError: (error: Error) => {
+  return useMutation<VoucherValidationResult, Error, ValidateVoucherPayload>({
+    mutationFn: (input) => vouchersApi.validate(input),
+    onError: (error) => {
+      const message =
+        (error instanceof ApiError && error.code && ERROR_MESSAGES[error.code]) ||
+        error.message ||
+        "Mã giảm giá không hợp lệ";
       toast.add({
         type: "error",
-        description: error.message,
+        description: message,
         priority: "high",
       });
     },

@@ -1,42 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  VOUCHERS_NOT_FOUND: "Một số voucher không tồn tại.",
-};
-
-async function bulkDeleteVouchers(
-  ids: string[],
-): Promise<{ deletedCount: number }> {
-  const res = await fetch("/api/vouchers/bulk", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    const message =
-      (data?.code && ERROR_MESSAGES[data.code]) ??
-      data?.message ??
-      "Không thể xóa các voucher đã chọn";
-    throw new Error(message);
-  }
-  return data;
-}
+import { queryKeys } from "@/lib/query-keys";
+import { vouchersApi } from "../api/vouchers-api";
 
 export function useBulkDeleteVouchers() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: bulkDeleteVouchers,
-    onSuccess: (data) => {
+    mutationFn: (ids: string[]) => vouchersApi.bulkDelete(ids),
+    onSuccess: () => {
       toast.add({
         type: "success",
-        description: `Đã xóa ${data.deletedCount} voucher`,
+        description: "Xoá voucher thành công.",
       });
-      queryClient.invalidateQueries({ queryKey: ["vouchers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.all });
     },
     onError: (error: Error) => {
       toast.add({
