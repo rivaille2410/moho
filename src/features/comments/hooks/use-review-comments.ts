@@ -1,4 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { commentsApi } from "@/features/comments/api/comments-api";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 import { CommentsResponse } from "@/types/review-comment";
 
@@ -14,33 +19,23 @@ export function reviewCommentsQueryKey({
   return ["review-comments", reviewId, page, limit] as const;
 }
 
-export async function fetchComments({
-  slug,
-  reviewId,
-  page,
-  limit,
-}: {
-  slug: string;
-  reviewId: string;
-  page: number;
-  limit: number;
-}) {
-  const search = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  });
-
-  const res = await fetch(
-    `/api/public/products/${slug}/reviews/${reviewId}/comments?${search}`,
+export async function fetchComments(
+  params: {
+    slug: string;
+    reviewId: string;
+    page: number;
+    limit: number;
+  },
+  signal?: AbortSignal,
+): Promise<CommentsResponse> {
+  return commentsApi.list(
+    params.slug,
+    params.reviewId,
+    params.page,
+    params.limit,
+    { signal },
   );
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message ?? "Không thể tải bình luận");
-  }
-  return data as CommentsResponse;
 }
-
 export function useReviewComments({
   slug,
   reviewId,
@@ -56,7 +51,10 @@ export function useReviewComments({
 }) {
   return useQuery({
     queryKey: reviewCommentsQueryKey({ reviewId, page, limit }),
-    queryFn: () => fetchComments({ slug, reviewId, page, limit }),
+    queryFn: ({ signal }) =>
+      commentsApi.list(slug, reviewId, page, limit, { signal }),
     enabled,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 }

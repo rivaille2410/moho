@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { fetchWithAuth } from "@/lib/auth-fetch";
+import { revalidatePublicPosts } from "@/features/posts/api/revalidate-public-posts";
 
 export async function GET(
   _request: NextRequest,
@@ -36,6 +37,7 @@ export async function PATCH(
   }
 
   const data = await res.json().catch(() => null);
+  if (res.ok) revalidatePublicPosts();
   return NextResponse.json(data, { status: res.status });
 }
 
@@ -54,9 +56,11 @@ export async function DELETE(
   }
 
   if (res.status === 204) {
+    revalidatePublicPosts();
     return new NextResponse(null, { status: 204 });
   }
 
   const data = await res.json().catch(() => null);
+  if (res.ok) revalidatePublicPosts();
   return NextResponse.json(data, { status: res.status });
 }

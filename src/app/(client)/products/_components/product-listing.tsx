@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { PublicProductSortBy } from "@/types/product";
+import type { ProductsResponse } from "@/types/product";
 
 import {
   Select,
@@ -42,6 +43,8 @@ import {
   ProductCardSkeleton,
 } from "../../(home)/_components/product-card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
+import { PublicApiLoadingHint } from "@/components/shared/public-api-loading-hint";
 
 const SORT_OPTIONS: { value: PublicProductSortBy; label: string }[] = [
   { value: "newest", label: "Mới nhất" },
@@ -186,12 +189,14 @@ type ProductListingProps = {
   source: ProductListingSource;
   title: string;
   breadcrumbLabel?: string;
+  initialPage?: ProductsResponse;
 };
 
 export function ProductListing({
   source,
   title,
   breadcrumbLabel,
+  initialPage,
 }: ProductListingProps) {
   const { useProducts, showSort } = SOURCES[source];
 
@@ -347,11 +352,14 @@ export function ProductListing({
   const {
     data,
     isLoading,
-    isError,
+    isLoadingError,
+    isFetchNextPageError,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useProducts(params);
+    isFetching,
+    refetch,
+  } = useProducts(params, initialPage);
 
   const allProducts = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
@@ -373,6 +381,7 @@ export function ProductListing({
   const sentinelRef = useInfiniteScroll({
     hasMore: hasNextPage,
     isLoading: isFetchingNextPage,
+    hasError: isFetchNextPageError,
     onLoadMore: () => fetchNextPage(),
   });
 
@@ -1011,13 +1020,11 @@ export function ProductListing({
           )}
         </div>
 
-        {isError ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
-            <p className="text-lg font-medium">Đã có lỗi xảy ra</p>
-            <p className="text-sm text-muted-foreground">
-              Không thể tải danh sách sản phẩm. Vui lòng thử lại.
-            </p>
-          </div>
+        {isLoadingError ? (
+          <PublicApiErrorState
+            onRetry={() => void refetch()}
+            isRetrying={isFetching}
+          />
         ) : !isLoading && allProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
             <p className="text-lg font-medium">Không tìm thấy sản phẩm</p>
@@ -1047,7 +1054,17 @@ export function ProductListing({
                 ))}
             </div>
 
+            {isLoading && <PublicApiLoadingHint className="mt-4" />}
+
             {hasNextPage && <div ref={sentinelRef} className="h-px" />}
+
+            {isFetchNextPageError && (
+              <PublicApiErrorState
+                compact
+                onRetry={() => void fetchNextPage()}
+                isRetrying={isFetchingNextPage}
+              />
+            )}
 
             {!hasNextPage && !isLoading && allProducts.length > 0 && (
               <p className="mt-8 text-center text-sm text-muted-foreground">

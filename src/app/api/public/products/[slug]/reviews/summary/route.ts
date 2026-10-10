@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyPublicApiGet } from "@/lib/public-api";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -6,12 +7,8 @@ interface RouteParams {
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { slug } = await params;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}/reviews/summary`,
-    { method: "GET" },
+  return proxyPublicApiGet(
+    req,
+    `/products/${encodeURIComponent(slug)}/reviews/summary`,
   );
-
-  const data = await res.json().catch(() => null);
-  return NextResponse.json(data, { status: res.status });
 }

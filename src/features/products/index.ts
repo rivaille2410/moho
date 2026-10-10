@@ -8,7 +8,6 @@ export * from "./hooks/use-update-product-status";
 export * from "./hooks/use-bulk-delete-products";
 export * from "./hooks/use-public-products";
 export * from "./hooks/use-public-product";
-export * from "./hooks/use-best-seller-products";
 export * from "./hooks/use-related-products";
 export * from "./hooks/use-product-variants";
 export * from "./hooks/use-product-slugs";

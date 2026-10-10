@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { fetchWithAuth } from "@/lib/auth-fetch";
+import { revalidatePublicPosts } from "@/features/posts/api/revalidate-public-posts";
 
 export async function DELETE(request: NextRequest) {
   const body = await request.json();
@@ -16,5 +17,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   const data = await res.json().catch(() => null);
+  if (res.ok) revalidatePublicPosts();
   return NextResponse.json(data, { status: res.status });
 }

@@ -1,8 +1,13 @@
 import {
-  useQuery,
   keepPreviousData,
   useInfiniteQuery,
+  useQuery,
 } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 import {
   ProductsResponse,
@@ -43,102 +48,91 @@ function buildProductsSearchParams(
 
 async function fetchPublicProducts(
   params: QueryPublicProductsParams,
+  signal?: AbortSignal,
 ): Promise<ProductsResponse> {
   const query = buildProductsSearchParams(params).toString();
-  const res = await fetch(`/api/public/products${query ? `?${query}` : ""}`, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return res.json();
+  return apiClient.get<ProductsResponse>(
+    `/api/public/products${query ? `?${query}` : ""}`,
+    { signal },
+  );
 }
 
 async function fetchPublicBestSellers(
   params: QueryPublicProductsParams,
+  signal?: AbortSignal,
 ): Promise<ProductsResponse> {
   const query = buildProductsSearchParams(params).toString();
-  const res = await fetch(
+  return apiClient.get<ProductsResponse>(
     `/api/public/products/best-sellers${query ? `?${query}` : ""}`,
-    { method: "GET" },
+    { signal },
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch best sellers");
-  }
-
-  return res.json();
 }
 
 async function fetchPublicColors(
   categoryId?: string,
+  signal?: AbortSignal,
 ): Promise<PublicColorOption[]> {
   const searchParams = new URLSearchParams();
   if (categoryId) searchParams.set("categoryId", categoryId);
 
   const query = searchParams.toString();
-  const res = await fetch(
+  return apiClient.get<PublicColorOption[]>(
     `/api/public/products/colors${query ? `?${query}` : ""}`,
-    { method: "GET" },
+    { signal },
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch colors");
-  }
-
-  return res.json();
 }
-
-export const usePublicProducts = (
-  params: QueryPublicProductsParams = {},
-  options?: { enabled?: boolean },
-) => {
-  return useQuery({
-    queryKey: ["public-products", params],
-    queryFn: () => fetchPublicProducts(params),
-    staleTime: 5 * 60 * 1000,
-    placeholderData: keepPreviousData,
-    enabled: options?.enabled,
-  });
-};
 
 export const usePublicProductsInfinite = (
   params: Omit<QueryPublicProductsParams, "page"> = { limit: 12 },
+  initialPage?: ProductsResponse,
+  options?: { enabled?: boolean },
 ) => {
   return useInfiniteQuery({
     queryKey: ["public-products-infinite", params],
-    queryFn: ({ pageParam }) =>
-      fetchPublicProducts({ ...params, page: pageParam }),
+    queryFn: ({ pageParam, signal }) =>
+      fetchPublicProducts({ ...params, page: pageParam }, signal),
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
     initialPageParam: 1,
-    staleTime: 5 * 60 * 1000,
+    initialData: initialPage
+      ? { pages: [initialPage], pageParams: [1] }
+      : undefined,
+    staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
+    enabled: options?.enabled,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 };
 
 export const usePublicBestSellersInfinite = (
   params: Omit<QueryPublicProductsParams, "page"> = { limit: 12 },
+  initialPage?: ProductsResponse,
 ) => {
   return useInfiniteQuery({
     queryKey: ["public-best-sellers-infinite", params],
-    queryFn: ({ pageParam }) =>
-      fetchPublicBestSellers({ ...params, page: pageParam }),
+    queryFn: ({ pageParam, signal }) =>
+      fetchPublicBestSellers({ ...params, page: pageParam }, signal),
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
     initialPageParam: 1,
-    staleTime: 5 * 60 * 1000,
+    initialData: initialPage
+      ? { pages: [initialPage], pageParams: [1] }
+      : undefined,
+    staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 };
 
 export const usePublicColors = (categoryId?: string) => {
   return useQuery({
     queryKey: ["public-colors", categoryId],
-    queryFn: () => fetchPublicColors(categoryId),
+    queryFn: ({ signal }) => fetchPublicColors(categoryId, signal),
     staleTime: 30 * 60 * 1000,
     placeholderData: keepPreviousData,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 };

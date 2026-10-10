@@ -15,6 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { authRequest } from "@/lib/auth-request";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 import { CartPopover } from "./cart-popover";
 import { SearchInput } from "./search-input";
@@ -40,10 +41,14 @@ import { useNotificationSocket } from "@/features/notifications/hooks/use-notifi
 export const Header = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const hydrated = useHydrated();
 
   useNotificationSocket();
 
-  const { data: user, isLoading } = useCurrentUser();
+  const { data, isLoading } = useCurrentUser();
+
+  const authReady = hydrated && !isLoading;
+  const user = authReady ? data : undefined;
 
   const handleLogout = async () => {
     const result = await authRequest({
@@ -67,10 +72,10 @@ export const Header = () => {
         <SearchInput />
 
         <div className="flex items-center">
-          {!(user?.role === "ADMIN") && <CartPopover />}
+          {user?.role !== "ADMIN" && <CartPopover />}
           {user && <NotificationPopover />}
 
-          {isLoading ? (
+          {!authReady ? (
             <Spinner className="size-5 text-secondary" />
           ) : user ? (
             <DropdownMenu>

@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
-import { Review } from "@/types/review";
+import { Review, ReviewRatingSummary } from "@/types/review";
 import { PaginationMeta } from "@/types/shared";
+import type { RequestOptions } from "@/lib/api-client";
 
 export interface QueryReviewsParams {
   productId?: string;
@@ -44,14 +45,28 @@ export const reviewsApi = {
     return apiClient.delete<void>(`/api/reviews/${id}`);
   },
 
-  publicList(productSlug: string, params?: Record<string, unknown>) {
-    return apiClient.get<ReviewsResponse>(`/api/public/products/${productSlug}/reviews`, {
-      params: params as Record<string, string | number | boolean>,
+  publicList(
+    productSlug: string,
+    params?: {
+      rating?: number;
+      hasImages?: boolean;
+      sort?: "newest" | "oldest";
+      page?: number;
+      limit?: number;
+    },
+    options?: Pick<RequestOptions, "signal">,
+  ) {
+    return apiClient.get<ReviewsResponse>(`/api/public/products/${encodeURIComponent(productSlug)}/reviews`, {
+      params,
+      ...options,
     });
   },
 
-  summary(productSlug: string) {
-    return apiClient.get<unknown>(`/api/public/products/${productSlug}/reviews/summary`);
+  summary(productSlug: string, options?: Pick<RequestOptions, "signal">) {
+    return apiClient.get<ReviewRatingSummary>(
+      `/api/public/products/${encodeURIComponent(productSlug)}/reviews/summary`,
+      options,
+    );
   },
 
   toggleHelpful(slug: string, reviewId: string) {

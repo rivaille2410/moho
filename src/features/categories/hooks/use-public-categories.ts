@@ -1,4 +1,9 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import {
+  publicQueryRetryDelay,
+  shouldRetryPublicQuery,
+} from "@/lib/query-client";
 
 import { PublicCategory } from "@/types/product";
 
@@ -10,6 +15,7 @@ export type QueryPublicCategoriesParams = {
 
 async function fetchPublicCategories(
   params: QueryPublicCategoriesParams = {},
+  signal?: AbortSignal,
 ): Promise<PublicCategory[]> {
   const searchParams = new URLSearchParams();
 
@@ -20,26 +26,25 @@ async function fetchPublicCategories(
   }
 
   const query = searchParams.toString();
-  const res = await fetch(`/api/public/categories${query ? `?${query}` : ""}`, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch categories");
-  }
-
-  return res.json();
+  return apiClient.get<PublicCategory[]>(
+    `/api/public/categories${query ? `?${query}` : ""}`,
+    { signal },
+  );
 }
 
 export const usePublicCategories = (
   params: QueryPublicCategoriesParams = {},
   options?: { enabled?: boolean },
+  initialData?: PublicCategory[],
 ) => {
   return useQuery({
     queryKey: ["public-categories", params],
-    queryFn: () => fetchPublicCategories(params),
-    staleTime: 30 * 60 * 1000,
+    queryFn: ({ signal }) => fetchPublicCategories(params, signal),
+    staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
     enabled: options?.enabled,
+    initialData,
+    retry: shouldRetryPublicQuery,
+    retryDelay: publicQueryRetryDelay,
   });
 };

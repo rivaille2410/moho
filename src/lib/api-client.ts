@@ -50,11 +50,25 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
     const translatedMessage = getErrorMessage(errorData, "Có lỗi xảy ra trong quá trình xử lý.");
 
+    const retryAfterHeader = res.headers.get("retry-after");
+    const retryAfterSeconds = retryAfterHeader
+      ? Number(retryAfterHeader)
+      : Number.NaN;
+    const retryAfterDate = retryAfterHeader
+      ? Date.parse(retryAfterHeader)
+      : Number.NaN;
+    const retryAfterMs = Number.isFinite(retryAfterSeconds)
+      ? Math.max(0, retryAfterSeconds * 1000)
+      : Number.isFinite(retryAfterDate)
+        ? Math.max(0, retryAfterDate - Date.now())
+        : undefined;
+
     throw new ApiError(
       res.status,
       translatedMessage,
       errorData.code,
       errorData.errors,
+      retryAfterMs,
     );
   }
 

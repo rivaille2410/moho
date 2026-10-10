@@ -2,10 +2,16 @@ import { apiClient } from "@/lib/api-client";
 import { CommentsResponse } from "@/types/review-comment";
 
 export const commentsApi = {
-  list(slug: string, reviewId: string, page = 1, limit = 10) {
+  list(
+    slug: string,
+    reviewId: string,
+    page = 1,
+    limit = 10,
+    options?: { signal?: AbortSignal | null },
+  ) {
     return apiClient.get<CommentsResponse>(
-      `/api/public/products/${slug}/reviews/${reviewId}/comments`,
-      { params: { page, limit } },
+      `/api/public/products/${encodeURIComponent(slug)}/reviews/${encodeURIComponent(reviewId)}/comments`,
+      { params: { page, limit }, ...options },
     );
   },
 
