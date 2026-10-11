@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/toast";
 import { queryKeys } from "@/lib/query-keys";
 import { CreateShipmentInput } from "@/types/shipment";
 import { shipmentsApi } from "../api/shipments-api";
+import { invalidateOrderDashboardCaches } from "@/features/orders/hooks/invalidate-order-dashboard-caches";
 
 export function useCreateShipment() {
   const queryClient = useQueryClient();
@@ -11,6 +12,7 @@ export function useCreateShipment() {
   return useMutation({
     mutationFn: (input: CreateShipmentInput) => shipmentsApi.create(input),
     onSuccess: () => {
+      void invalidateOrderDashboardCaches(queryClient);
       toast.add({ type: "success", description: "Đã tạo vận đơn mới" });
       queryClient.invalidateQueries({ queryKey: queryKeys.shipments.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });

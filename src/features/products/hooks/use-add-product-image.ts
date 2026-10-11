@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidatePublicProductCaches } from "./invalidate-product-caches";
 
 import { toast } from "@/components/ui/toast";
 import { type ProductListItem } from "@/types/product";
@@ -49,6 +50,7 @@ export function useAddProductImage() {
             : "Đã thêm ảnh sản phẩm",
       });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      void invalidatePublicProductCaches(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["products", variables.productId],
       });

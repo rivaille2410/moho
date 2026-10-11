@@ -33,6 +33,8 @@ export function useCreatePost() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã tạo bài viết mới" });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts"] });
     },
     onError: (error: Error) => {
       toast.add({

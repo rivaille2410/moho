@@ -34,6 +34,8 @@ export function useUpdatePostStatus() {
     mutationFn: updatePostStatus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts"] });
       toast.add({ type: "success", description: "Đã cập nhật trạng thái" });
     },
     onError: (error: Error) => {

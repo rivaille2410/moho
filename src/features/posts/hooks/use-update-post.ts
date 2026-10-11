@@ -29,6 +29,8 @@ export function useUpdatePost() {
     onSuccess: (_data, variables) => {
       toast.add({ type: "success", description: "Đã lưu thông tin bài viết" });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts"] });
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id] });
     },
     onError: (error: Error) => {

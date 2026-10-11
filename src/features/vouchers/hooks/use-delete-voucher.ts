@@ -11,6 +11,7 @@ export function useDeleteVoucher() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã xóa voucher" });
       queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-active-vouchers"] });
     },
     onError: (error: Error) => {
       toast.add({

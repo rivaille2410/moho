@@ -15,6 +15,7 @@ export function useBulkDeleteVouchers() {
         description: "Xoá voucher thành công.",
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-active-vouchers"] });
     },
     onError: (error: Error) => {
       toast.add({

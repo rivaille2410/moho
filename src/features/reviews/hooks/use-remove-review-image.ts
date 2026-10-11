@@ -29,6 +29,8 @@ export function useRemoveReviewImage() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã xoá ảnh" });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["review-summary"] });
     },
     onError: (error: Error) => {
       toast.add({

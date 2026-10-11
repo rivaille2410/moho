@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidatePublicProductCaches } from "./invalidate-product-caches";
 
 import { toast } from "@/components/ui/toast";
 import { RemoveProductImageArgs, type ProductListItem } from "@/types/product";
@@ -27,6 +28,7 @@ export function useRemoveProductImage() {
     onSuccess: (_data, variables) => {
       toast.add({ type: "success", description: "Đã xoá ảnh sản phẩm" });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      void invalidatePublicProductCaches(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["products", variables.productId],
       });

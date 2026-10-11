@@ -15,6 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { authRequest } from "@/lib/auth-request";
+import { queryKeys } from "@/lib/query-keys";
 import { useHydrated } from "@/hooks/use-hydrated";
 
 import { CartPopover } from "./cart-popover";
@@ -57,7 +58,7 @@ export const Header = () => {
     });
 
     if (result.ok) {
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.setQueryData(queryKeys.auth.me(), null);
       router.push("/");
     }
   };

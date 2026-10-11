@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidatePublicProductCaches } from "./invalidate-product-caches";
 
 import {
   type ProductListItem,
@@ -32,6 +33,7 @@ export function useUpdateProductStatus() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã đổi trạng thái sản phẩm" });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      void invalidatePublicProductCaches(queryClient);
     },
     onError: (error: Error) => {
       toast.add({

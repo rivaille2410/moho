@@ -2,7 +2,14 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 
 import {
   Minus,
@@ -55,6 +62,11 @@ interface ProductPageProps {
 
 export default function ProductPage({ slug, initialProduct }: ProductPageProps) {
   const router = useRouter();
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   const {
     data: product,
     isLoading,
@@ -547,7 +559,7 @@ export default function ProductPage({ slug, initialProduct }: ProductPageProps) 
 
         <div className="rounded-lg border mt-10">
           <Tabs defaultValue="description">
-            <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-4 py-0">
+            <TabsList className="sticky top-14 z-40 h-auto w-full justify-start gap-6 rounded-t-lg rounded-b-none border-b bg-background px-4 py-0">
               <TabsTrigger
                 value="description"
                 className="rounded-none shadow-none! px-0 py-3 text-base font-semibold text-muted-foreground data-[state=active]:bg-transparent"

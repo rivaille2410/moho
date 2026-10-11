@@ -19,6 +19,7 @@ export function useUpdateVoucherStatus() {
     onSuccess: (data, { id }) => {
       toast.add({ type: "success", description: "Đã cập nhật trạng thái" });
       queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-active-vouchers"] });
       queryClient.setQueryData(queryKeys.vouchers.detail(id), data);
     },
     onError: (error: Error) => {

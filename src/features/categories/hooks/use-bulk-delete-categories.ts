@@ -20,6 +20,7 @@ export function useBulkDeleteCategories() {
       });
 
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+      void queryClient.invalidateQueries({ queryKey: ["public-categories"] });
     },
     onError: (error: Error) => {
       toast.add({

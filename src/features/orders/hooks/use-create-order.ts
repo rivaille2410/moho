@@ -3,6 +3,8 @@ import { toast } from "@/components/ui/toast";
 import { ordersApi } from "../api/orders-api";
 import { queryKeys } from "@/lib/query-keys";
 import { CreateOrderInput } from "@/types/order";
+import { invalidatePublicProductCaches } from "@/features/products/hooks/invalidate-product-caches";
+import { invalidateOrderDashboardCaches } from "./invalidate-order-dashboard-caches";
 
 export function useCreateOrder() {
   const queryClient = useQueryClient();
@@ -10,6 +12,8 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: (input: CreateOrderInput) => ordersApi.create(input),
     onSuccess: () => {
+      void invalidatePublicProductCaches(queryClient);
+      void invalidateOrderDashboardCaches(queryClient);
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
     onError: (error: Error) => {
