@@ -12,6 +12,7 @@ export function useUpdateCategory() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã cập nhật danh mục" });
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+      void queryClient.invalidateQueries({ queryKey: ["public-categories"] });
     },
     onError: (error: Error) => {
       toast.add({

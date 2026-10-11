@@ -17,6 +17,7 @@ export function useUpdateVoucher() {
     onSuccess: (data, variables) => {
       toast.add({ type: "success", description: "Đã cập nhật voucher" });
       queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-active-vouchers"] });
       queryClient.setQueryData(queryKeys.vouchers.detail(variables.id), data);
     },
     onError: (error: Error) => {

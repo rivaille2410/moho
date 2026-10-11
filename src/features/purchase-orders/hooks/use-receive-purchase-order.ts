@@ -5,6 +5,7 @@ import {
   ReceivePurchaseOrderInput,
 } from "@/types/purchase-order";
 import { toast } from "@/components/ui/toast";
+import { invalidateProductAndPublicCaches } from "@/features/products/hooks/invalidate-product-caches";
 
 const ERROR_MESSAGES: Record<string, string> = {
   PURCHASE_ORDER_NOT_FOUND: "Không tìm thấy đơn nhập hàng.",
@@ -44,6 +45,7 @@ export function useReceivePurchaseOrder() {
       input: ReceivePurchaseOrderInput;
     }) => receivePurchaseOrder(id, input),
     onSuccess: (_data, variables) => {
+      void invalidateProductAndPublicCaches(queryClient);
       queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
       queryClient.invalidateQueries({
         queryKey: ["purchase-orders", variables.id],

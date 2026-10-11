@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
 
 import { authRequest } from "@/lib/auth-request";
+import { queryKeys } from "@/lib/query-keys";
 
 import {
   DropdownMenu,
@@ -44,7 +45,7 @@ export function NavUser({
     });
 
     if (result.ok) {
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.setQueryData(queryKeys.auth.me(), null);
       router.push("/");
     }
   };

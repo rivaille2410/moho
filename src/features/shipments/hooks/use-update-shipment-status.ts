@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/toast";
 import { queryKeys } from "@/lib/query-keys";
 import { Shipment, UpdateShipmentStatusInput } from "@/types/shipment";
 import { shipmentsApi } from "../api/shipments-api";
+import { invalidateOrderDashboardCaches } from "@/features/orders/hooks/invalidate-order-dashboard-caches";
 
 interface UpdateShipmentStatusParams {
   id: string;
@@ -16,6 +17,7 @@ export function useUpdateShipmentStatus() {
   return useMutation<Shipment, Error, UpdateShipmentStatusParams>({
     mutationFn: ({ id, input }) => shipmentsApi.updateStatus(id, input),
     onSuccess: () => {
+      void invalidateOrderDashboardCaches(queryClient);
       toast.add({ type: "success", description: "Đã cập nhật trạng thái" });
       queryClient.invalidateQueries({ queryKey: queryKeys.shipments.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });

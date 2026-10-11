@@ -36,6 +36,8 @@ export function useUpdateReview() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã cập nhật đánh giá" });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["review-summary"] });
     },
     onError: (error: Error) => {
       toast.add({

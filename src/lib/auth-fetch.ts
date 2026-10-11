@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import { getBackendApiBaseUrl, withBackendTimeout } from "@/lib/backend-api";
 
 const COOKIE_OPTS = {
@@ -7,6 +8,30 @@ const COOKIE_OPTS = {
   sameSite: "lax" as const,
   path: "/",
 };
+
+function revalidatePublicDataForMutation(
+  path: string,
+  method: string,
+  response: Response,
+) {
+  if (method === "GET" || !response.ok) return;
+
+  const normalizedPath = path.split("?")[0];
+  if (/^\/products(?:\/|$)/.test(normalizedPath)) {
+    revalidateTag("public-products", { expire: 0 });
+  }
+  if (/^\/categories(?:\/|$)/.test(normalizedPath)) {
+    revalidateTag("public-categories", { expire: 0 });
+  }
+  if (
+    /^\/stock-movements(?:\/|$)/.test(normalizedPath) ||
+    /^\/purchase-orders\/[^/]+\/receive(?:\/|$)/.test(normalizedPath) ||
+    (normalizedPath === "/orders" && method === "POST") ||
+    (/^\/orders\/[^/]+\/status(?:\/|$)/.test(normalizedPath) && method === "PATCH")
+  ) {
+    revalidateTag("public-products", { expire: 0 });
+  }
+}
 
 interface Tokens {
   accessToken: string;
@@ -40,8 +65,8 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
     return { res: null, unauthorized: true as const };
   }
 
-  const callBackend = (token: string) =>
-    fetch(
+  const callBackend = async (token: string) => {
+    const response = await fetch(
       `${getBackendApiBaseUrl()}${path}`,
       withBackendTimeout({
         ...init,
@@ -51,6 +76,9 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
         },
       }),
     );
+    revalidatePublicDataForMutation(path, init.method ?? "GET", response);
+    return response;
+  };
 
   if (accessToken) {
     const res = await callBackend(accessToken);

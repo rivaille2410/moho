@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { cn } from "@/lib/utils";
 
@@ -88,7 +89,7 @@ export function VerifyEmailContent() {
           return;
         }
 
-        await queryClient.invalidateQueries({ queryKey: ["me"] });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
         setStatus("success");
         toast.add({
           type: "success",

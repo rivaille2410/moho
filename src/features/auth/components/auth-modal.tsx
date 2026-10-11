@@ -15,6 +15,7 @@ import {
   type ForgotPasswordValues,
 } from "@/schemas/auth";
 import { authRequest } from "@/lib/auth-request";
+import { queryKeys } from "@/lib/query-keys";
 import { fetchMe } from "../hooks/use-current-user";
 
 import {
@@ -172,10 +173,9 @@ export const AuthModal = ({ children }: AuthModalProps) => {
 
     if (!result.ok) return;
 
-    await queryClient.invalidateQueries({ queryKey: ["me"] });
-    setOpen(false);
-
     const me = await fetchMe();
+    queryClient.setQueryData(queryKeys.auth.me(), me);
+    setOpen(false);
 
     if (redirectTo) {
       router.push(redirectTo);

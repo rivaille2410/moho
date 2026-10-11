@@ -19,6 +19,8 @@ export function useDeletePost() {
     onSuccess: () => {
       toast.add({ type: "success", description: "Đã xoá bài viết" });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts-infinite"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-posts"] });
     },
     onError: (error: Error) => {
       toast.add({

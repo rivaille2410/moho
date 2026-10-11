@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidatePublicProductCaches } from "./invalidate-product-caches";
 
 import { toast } from "@/components/ui/toast";
 
@@ -40,6 +41,7 @@ export function useBulkDeleteProducts() {
         description: `Đã xoá ${data.deletedCount} sản phẩm`,
       });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      void invalidatePublicProductCaches(queryClient);
     },
     onError: (error: Error) => {
       toast.add({

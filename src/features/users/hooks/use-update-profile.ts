@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { authRequest } from "@/lib/auth-request";
+import { queryKeys } from "@/lib/query-keys";
 
 interface UpdateProfileInput {
   name: string;
@@ -21,7 +22,7 @@ export function useUpdateProfile() {
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
     },
   });
 }

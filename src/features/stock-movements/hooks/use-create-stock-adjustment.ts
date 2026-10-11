@@ -5,6 +5,7 @@ import {
   CreateStockAdjustmentInput,
 } from "@/types/stock-movement";
 import { toast } from "@/components/ui/toast";
+import { invalidateProductAndPublicCaches } from "@/features/products/hooks/invalidate-product-caches";
 
 const ERROR_MESSAGES: Record<string, string> = {
   VARIANT_NOT_FOUND: "Không tìm thấy sản phẩm.",
@@ -38,6 +39,7 @@ export function useCreateStockAdjustment() {
   return useMutation({
     mutationFn: createStockAdjustment,
     onSuccess: () => {
+      void invalidateProductAndPublicCaches(queryClient);
       queryClient.invalidateQueries({ queryKey: ["stock-movements"] });
       toast.add({
         type: "success",
