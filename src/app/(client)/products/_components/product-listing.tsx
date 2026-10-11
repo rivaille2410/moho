@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { cn } from "@/lib/utils";
 import {
@@ -76,7 +77,7 @@ type Filters = {
   categoryId: string | null;
   subCategoryId: string | null;
   inStockOnly: boolean;
-  onSale: boolean;
+  saleStatus: "all" | "on-sale" | "regular-price";
   colors: string[];
   minPrice: string;
   maxPrice: string;
@@ -88,7 +89,7 @@ const DEFAULT_FILTERS: Filters = {
   categoryId: null,
   subCategoryId: null,
   inStockOnly: true,
-  onSale: false,
+  saleStatus: "all",
   colors: [],
   minPrice: "",
   maxPrice: "",
@@ -291,9 +292,15 @@ export function ProductListing({
   const debouncedMinPrice = useDebouncedValue(filters.minPrice, 400);
   const debouncedMaxPrice = useDebouncedValue(filters.maxPrice, 400);
 
-  const { data: rootCategories } = usePublicCategories({ rootOnly: true });
+  const {
+    data: rootCategories,
+    isLoading: isLoadingRootCategories,
+  } = usePublicCategories({ rootOnly: true });
 
-  const { data: subCategories } = usePublicCategories(
+  const {
+    data: subCategories,
+    isLoading: isLoadingSubCategories,
+  } = usePublicCategories(
     { parentId: filters.categoryId ?? undefined },
     { enabled: !!filters.categoryId },
   );
@@ -301,7 +308,12 @@ export function ProductListing({
   const activeCategoryId =
     filters.subCategoryId ?? filters.categoryId ?? undefined;
 
-  const { data: colorOptions } = usePublicColors(activeCategoryId);
+  const {
+    data: colorOptions,
+    isLoading: isLoadingColors,
+    isError: isColorsError,
+    refetch: refetchColors,
+  } = usePublicColors();
 
   const priceRange = useMemo<[number, number]>(() => {
     const min = filters.minPrice ? Number(filters.minPrice) : PRICE_MIN;
@@ -329,7 +341,14 @@ export function ProductListing({
       limit: pageSize,
       search: debouncedSearch || undefined,
       categoryId: activeCategoryId,
-      onSale: filters.onSale ? true : undefined,
+      // The backend's current false value path returns no products in prod/dev.
+      // Omit the parameter for the default in-stock view; filter in-stock rows
+      // from the fetched page below. Send true only when the user asks for OOS.
+      outOfStock: filters.inStockOnly ? undefined : true,
+      onSale:
+        filters.saleStatus === "all"
+          ? undefined
+          : filters.saleStatus === "on-sale",
       colors: filters.colors.length ? filters.colors : undefined,
       minPrice: min !== undefined && !Number.isNaN(min) ? min : undefined,
       maxPrice: max !== undefined && !Number.isNaN(max) ? max : undefined,
@@ -341,11 +360,19 @@ export function ProductListing({
     debouncedMinPrice,
     debouncedMaxPrice,
     activeCategoryId,
-    filters.onSale,
+    filters.inStockOnly,
+    filters.saleStatus,
     filters.colors,
     filters.sortBy,
     showSort,
   ]);
+
+  const hasClientOnlyFilters =
+    !filters.inStockOnly ||
+    filters.saleStatus !== "all" ||
+    filters.colors.length > 0 ||
+    debouncedMinPrice !== "" ||
+    debouncedMaxPrice !== "";
 
   const {
     data,
@@ -357,19 +384,72 @@ export function ProductListing({
     isFetchingNextPage,
     isFetching,
     refetch,
-  } = useProducts(params, initialPage);
+  } = useProducts(
+    params,
+    hasClientOnlyFilters ? undefined : initialPage,
+  );
 
   const allProducts = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
     [data],
   );
+  const filterColorOptions = useMemo(() => {
+    const optionsByHex = new Map<string, { name: string; hex: string }>();
+
+    for (const color of colorOptions ?? []) {
+      if (!color.hex) continue;
+      optionsByHex.set(color.hex.toLowerCase(), {
+        name: color.name,
+        hex: color.hex,
+      });
+    }
+
+    for (const product of allProducts) {
+      for (const variant of product.variants) {
+        if (!variant.colorHex) continue;
+        const key = variant.colorHex.toLowerCase();
+        if (!optionsByHex.has(key)) {
+          optionsByHex.set(key, {
+            name: variant.colorName ?? variant.name,
+            hex: variant.colorHex,
+          });
+        }
+      }
+    }
+
+    return [...optionsByHex.values()];
+  }, [allProducts, colorOptions]);
   const totalItems = data?.pages[0]?.meta.totalItems;
   const productsForDisplay = useMemo(
     () =>
-      filters.inStockOnly
-        ? allProducts.filter((product) => product.totalStock > 0)
-        : allProducts,
-    [allProducts, filters.inStockOnly],
+      allProducts.filter((product) => {
+        const matchingVariants = filters.colors.length
+          ? product.variants.filter(
+              (variant) =>
+                variant.colorHex &&
+                filters.colors.includes(variant.colorHex.toLowerCase()),
+            )
+          : product.variants;
+        const hasMatchingStock = matchingVariants.some(
+          (variant) => variant.stock > 0,
+        );
+        const stockMatches = filters.inStockOnly
+          ? filters.colors.length
+            ? hasMatchingStock
+            : product.totalStock > 0
+          : filters.colors.length
+            ? matchingVariants.length > 0 && !hasMatchingStock
+            : product.totalStock <= 0;
+        const isDiscounted = product.compareAtPrice !== null;
+        const saleMatches =
+          filters.saleStatus === "all" ||
+          (filters.saleStatus === "on-sale"
+            ? isDiscounted
+            : !isDiscounted);
+
+        return stockMatches && saleMatches;
+      }),
+    [allProducts, filters.colors, filters.inStockOnly, filters.saleStatus],
   );
   const displayTotalItems = filters.inStockOnly
     ? hasNextPage
@@ -428,7 +508,7 @@ export function ProductListing({
     filters.categoryId !== DEFAULT_FILTERS.categoryId ||
     filters.subCategoryId !== DEFAULT_FILTERS.subCategoryId ||
     filters.inStockOnly !== DEFAULT_FILTERS.inStockOnly ||
-    filters.onSale !== DEFAULT_FILTERS.onSale ||
+    filters.saleStatus !== DEFAULT_FILTERS.saleStatus ||
     filters.colors.length > 0 ||
     filters.minPrice !== DEFAULT_FILTERS.minPrice ||
     filters.maxPrice !== DEFAULT_FILTERS.maxPrice ||
@@ -438,7 +518,7 @@ export function ProductListing({
     (filters.categoryId ? 1 : 0) +
     (filters.subCategoryId ? 1 : 0) +
     (filters.inStockOnly !== DEFAULT_FILTERS.inStockOnly ? 1 : 0) +
-    (filters.onSale ? 1 : 0) +
+    (filters.saleStatus !== "all" ? 1 : 0) +
     filters.colors.length +
     (filters.minPrice || filters.maxPrice ? 1 : 0) +
     (sortChanged ? 1 : 0);
@@ -551,19 +631,31 @@ export function ProductListing({
             </button>
 
             <FilterPill
-              active={filters.inStockOnly}
+              active
               onClick={() =>
                 setFilters((f) => ({ ...f, inStockOnly: !f.inStockOnly }))
               }
             >
-              Còn hàng
+              {filters.inStockOnly ? "Còn hàng" : "Hết hàng"}
             </FilterPill>
 
             <FilterPill
-              active={filters.onSale}
-              onClick={() => setFilters((f) => ({ ...f, onSale: !f.onSale }))}
+              active={filters.saleStatus !== "all"}
+              onClick={() =>
+                setFilters((f) => ({
+                  ...f,
+                  saleStatus:
+                    f.saleStatus === "all"
+                      ? "on-sale"
+                      : f.saleStatus === "on-sale"
+                        ? "regular-price"
+                        : "all",
+                }))
+              }
             >
-              Đang giảm giá
+              {filters.saleStatus === "regular-price"
+                ? "Không giảm giá"
+                : "Đang giảm giá"}
             </FilterPill>
 
             {filters.categoryId && (
@@ -580,11 +672,28 @@ export function ProductListing({
               />
             )}
 
-            {filters.colors.map((color) => (
+            {filters.saleStatus !== "all" && (
               <ActiveChip
-                key={color}
-                label={color}
-                onRemove={() => toggleColor(color)}
+                label={
+                  filters.saleStatus === "on-sale"
+                    ? "Đang giảm giá"
+                    : "Không giảm giá"
+                }
+                onRemove={() =>
+                  setFilters((f) => ({ ...f, saleStatus: "all" }))
+                }
+              />
+            )}
+
+            {filters.colors.map((hex) => (
+              <ActiveChip
+                key={hex}
+                label={
+                  filterColorOptions.find(
+                    (color) => color.hex.toLowerCase() === hex,
+                  )?.name ?? hex
+                }
+                onRemove={() => toggleColor(hex)}
               />
             ))}
 
@@ -661,9 +770,30 @@ export function ProductListing({
                       {cat.name}
                     </FilterPill>
                   ))}
+                  {isLoadingRootCategories &&
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <Skeleton
+                        key={`root-category-${index}`}
+                        className="h-9 w-20 rounded-full"
+                      />
+                    ))}
                 </div>
 
-                {filters.categoryId && !!subCategories?.length && (
+                {filters.categoryId && isLoadingSubCategories ? (
+                  <div className="space-y-2 border-l-2 pl-3">
+                    <p className="text-xs text-muted-foreground">
+                      Danh mục con
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton
+                          key={`sub-category-${index}`}
+                          className="h-9 w-24 rounded-full"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : filters.categoryId && !!subCategories?.length ? (
                   <div className="space-y-2 border-l-2 pl-3">
                     <p className="text-xs text-muted-foreground">
                       Danh mục con
@@ -686,7 +816,7 @@ export function ProductListing({
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
               </SheetSection>
 
               <SheetSection title="Khoảng giá">
@@ -757,25 +887,41 @@ export function ProductListing({
                 </div>
               </SheetSection>
 
-              {!!colorOptions?.length && (
-                <SheetSection title="Màu sắc">
+              <SheetSection title="Màu sắc">
+                {filterColorOptions.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {colorOptions.map((color) => (
+                    {filterColorOptions.map((color) => (
                       <FilterPill
-                        key={color.name}
-                        active={filters.colors.includes(color.name)}
-                        onClick={() => toggleColor(color.name)}
+                        key={color.hex}
+                        active={filters.colors.includes(color.hex.toLowerCase())}
+                        onClick={() => toggleColor(color.hex.toLowerCase())}
                       >
                         <span
                           className="size-4 rounded-full border border-black/10"
-                          style={{ backgroundColor: color.hex ?? "#d4d4d8" }}
+                          style={{ backgroundColor: color.hex }}
                         />
                         {color.name}
                       </FilterPill>
                     ))}
                   </div>
-                </SheetSection>
-              )}
+                ) : isLoadingColors ? (
+                  <div className="flex flex-wrap gap-2" aria-label="Đang tải màu sắc">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <Skeleton key={index} className="h-8 w-20 rounded-full" />
+                    ))}
+                  </div>
+                ) : isColorsError ? (
+                  <button
+                    type="button"
+                    className="text-left text-sm text-muted-foreground underline underline-offset-4"
+                    onClick={() => void refetchColors()}
+                  >
+                    Không tải được màu sắc. Nhấn để thử lại.
+                  </button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Chưa có màu để lọc.</p>
+                )}
+              </SheetSection>
 
               <SheetSection title="Tình trạng">
                 <div className="space-y-4">
@@ -784,7 +930,9 @@ export function ProductListing({
                       htmlFor="sheet-in-stock-only"
                       className="text-sm font-normal"
                     >
-                      Chỉ hiện sản phẩm còn hàng
+                      {filters.inStockOnly
+                        ? "Chỉ hiện sản phẩm còn hàng"
+                        : "Chỉ hiện sản phẩm hết hàng"}
                     </Label>
                     <Switch
                       id="sheet-in-stock-only"
@@ -795,20 +943,37 @@ export function ProductListing({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <Label
-                      htmlFor="sheet-on-sale-only"
-                      className="text-sm font-normal"
-                    >
-                      Chỉ hiện sản phẩm đang giảm giá
-                    </Label>
-                    <Switch
-                      id="sheet-on-sale-only"
-                      checked={filters.onSale}
-                      onCheckedChange={(checked) =>
-                        setFilters((f) => ({ ...f, onSale: checked }))
-                      }
-                    />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-normal">Giá bán</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <FilterPill
+                        active={filters.saleStatus === "all"}
+                        onClick={() =>
+                          setFilters((f) => ({ ...f, saleStatus: "all" }))
+                        }
+                      >
+                        Tất cả
+                      </FilterPill>
+                      <FilterPill
+                        active={filters.saleStatus === "on-sale"}
+                        onClick={() =>
+                          setFilters((f) => ({ ...f, saleStatus: "on-sale" }))
+                        }
+                      >
+                        Đang giảm giá
+                      </FilterPill>
+                      <FilterPill
+                        active={filters.saleStatus === "regular-price"}
+                        onClick={() =>
+                          setFilters((f) => ({
+                            ...f,
+                            saleStatus: "regular-price",
+                          }))
+                        }
+                      >
+                        Không giảm giá
+                      </FilterPill>
+                    </div>
                   </div>
                 </div>
               </SheetSection>
@@ -851,8 +1016,12 @@ export function ProductListing({
                   {(value: string) =>
                     value === ALL_CATEGORIES_VALUE
                       ? "Tất cả danh mục"
-                      : (rootCategories?.find((c) => c.id === value)?.name ??
-                        value)
+                      : rootCategories?.find((c) => c.id === value)?.name ??
+                        (isLoadingRootCategories ? (
+                          <Skeleton className="h-4 w-24" />
+                        ) : (
+                          "Danh mục"
+                        ))
                   }
                 </SelectValue>
               </SelectTrigger>
@@ -869,7 +1038,14 @@ export function ProductListing({
             </Select>
           </div>
 
-          {filters.categoryId && !!subCategories?.length && (
+          {filters.categoryId && isLoadingSubCategories ? (
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Danh mục con
+              </Label>
+              <Skeleton className="h-9 w-36 rounded-md" />
+            </div>
+          ) : filters.categoryId && !!subCategories?.length ? (
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">
                 Danh mục con
@@ -885,8 +1061,8 @@ export function ProductListing({
                     {(value: string) =>
                       value === ALL_SUBCATEGORIES_VALUE
                         ? "Tất cả danh mục con"
-                        : (subCategories?.find((c) => c.id === value)?.name ??
-                          value)
+                        : subCategories?.find((c) => c.id === value)?.name ??
+                          "Danh mục con"
                     }
                   </SelectValue>
                 </SelectTrigger>
@@ -902,7 +1078,7 @@ export function ProductListing({
                 </SelectContent>
               </Select>
             </div>
-          )}
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Khoảng giá</Label>
@@ -955,18 +1131,19 @@ export function ProductListing({
             />
           </div>
 
-          {!!colorOptions?.length && (
-            <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">Màu sắc</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {colorOptions.map((color) => {
-                  const isSelected = filters.colors.includes(color.name);
+              {filterColorOptions.length ? (
+                <div className="flex flex-wrap gap-1.5">
+                {filterColorOptions.map((color) => {
+                  const hex = color.hex.toLowerCase();
+                  const isSelected = filters.colors.includes(hex);
                   return (
                     <button
-                      key={color.name}
+                      key={color.hex}
                       type="button"
                       title={color.name}
-                      onClick={() => toggleColor(color.name)}
+                      onClick={() => toggleColor(hex)}
                       className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs transition-colors ${
                         isSelected
                           ? "border-secondary bg-secondary/10 ring-[3px] ring-secondary/30 text-secondary"
@@ -975,15 +1152,31 @@ export function ProductListing({
                     >
                       <span
                         className="size-3.5 rounded-full border border-black/10"
-                        style={{ backgroundColor: color.hex ?? "#d4d4d8" }}
+                        style={{ backgroundColor: color.hex }}
                       />
                       {color.name}
                     </button>
                   );
                 })}
-              </div>
-            </div>
-          )}
+                </div>
+              ) : isLoadingColors ? (
+                <div className="flex flex-wrap gap-1.5" aria-label="Đang tải màu sắc">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-7 w-20 rounded-full" />
+                  ))}
+                </div>
+              ) : isColorsError ? (
+                <button
+                  type="button"
+                  className="self-start text-xs text-muted-foreground underline underline-offset-4"
+                  onClick={() => void refetchColors()}
+                >
+                  Không tải được màu sắc. Nhấn để thử lại.
+                </button>
+              ) : (
+                <p className="text-xs text-muted-foreground">Chưa có màu để lọc.</p>
+              )}
+          </div>
 
           {showSort && (
             <div className="flex flex-col gap-1.5">
@@ -1028,21 +1221,39 @@ export function ProductListing({
               htmlFor="in-stock-only"
               className="text-sm whitespace-nowrap"
             >
-              Còn hàng
+              {filters.inStockOnly ? "Còn hàng" : "Hết hàng"}
             </Label>
           </div>
 
-          <div className="flex items-center gap-2 pb-1.5">
-            <Switch
-              id="on-sale-only"
-              checked={filters.onSale}
-              onCheckedChange={(checked) =>
-                setFilters((f) => ({ ...f, onSale: checked }))
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Giá bán</Label>
+            <Select
+              value={filters.saleStatus}
+              onValueChange={(value) =>
+                setFilters((f) => ({
+                  ...f,
+                  saleStatus:
+                    (value as Filters["saleStatus"] | null) ?? "all",
+                }))
               }
-            />
-            <Label htmlFor="on-sale-only" className="text-sm whitespace-nowrap">
-              Đang giảm giá
-            </Label>
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue>
+                  {(value: string) =>
+                    value === "on-sale"
+                      ? "Đang giảm giá"
+                      : value === "regular-price"
+                        ? "Không giảm giá"
+                        : "Tất cả"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="on-sale">Đang giảm giá</SelectItem>
+                <SelectItem value="regular-price">Không giảm giá</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {hasActiveFilters && (
