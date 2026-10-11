@@ -6,6 +6,7 @@ import { usePublicCategories } from "@/features/categories/hooks/use-public-cate
 import { usePublicProductsInfinite } from "@/features/products/hooks/use-public-products";
 import type { ProductsResponse, PublicCategory } from "@/types/product";
 import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PRODUCTS_PER_CATEGORY = 12;
 
@@ -71,6 +72,7 @@ export default function CategoryProductLists({
 }: CategoryProductListsProps) {
   const {
     data: categories,
+    isLoading: categoriesLoading,
     isLoadingError: categoriesLoadingError,
     isFetching: categoriesFetching,
     refetch: refetchCategories,
@@ -89,6 +91,22 @@ export default function CategoryProductLists({
           isRetrying={categoriesFetching}
         />
       </div>
+    );
+  }
+  if (categoriesLoading) {
+    return (
+      <>
+        {Array.from({ length: maxCategories ?? 4 }, (_, sectionIndex) => (
+          <div key={sectionIndex} className="wrapper">
+            <ProductGrid
+              title={<Skeleton className="h-7 w-52" />}
+              products={[]}
+              isLoading
+              skeletonCount={PRODUCTS_PER_CATEGORY}
+            />
+          </div>
+        ))}
+      </>
     );
   }
   if (!categories?.length) return null;

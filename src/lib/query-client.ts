@@ -13,8 +13,13 @@ export function createQueryClient(): QueryClient {
           if (isApiError(error) && error.isClientError) {
             return false;
           }
-          return failureCount < 2;
+          // Render free instances can take a while to wake up. Retry only
+          // transient server and network failures while the loading UI shows.
+          if (failureCount >= 12) return false;
+          if (isApiError(error)) return error.isServerError;
+          return error instanceof TypeError;
         },
+        retryDelay: publicQueryRetryDelay,
       },
       mutations: {
         retry: false,
@@ -27,10 +32,9 @@ export function shouldRetryPublicQuery(
   failureCount: number,
   error: unknown,
 ): boolean {
-  if (failureCount >= 5) return false;
+  if (failureCount >= 12) return false;
 
   if (isApiError(error)) {
-    if (error.code === "UPSTREAM_TIMEOUT") return false;
     return (
       error.status === 408 ||
       error.status === 425 ||
@@ -50,5 +54,5 @@ export function publicQueryRetryDelay(
     return Math.min(error.retryAfterMs, 15_000);
   }
 
-  return Math.min(1000 * 2 ** attemptIndex, 10_000);
+  return Math.min(1000 * 2 ** attemptIndex, 5_000);
 }

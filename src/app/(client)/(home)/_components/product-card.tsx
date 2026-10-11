@@ -112,9 +112,17 @@ export function ProductCardSkeleton() {
   return (
     <div className="flex flex-col">
       <Skeleton className="mb-3 aspect-square rounded-md" />
-      <Skeleton className="mb-1.5 h-4 w-full" />
-      <Skeleton className="mb-1 h-4 w-2/3" />
-      <Skeleton className="h-3 w-1/2" />
+      <div className="mb-1.5 flex min-h-9.5 flex-col justify-center gap-1">
+        <Skeleton className="h-4 w-full sm:h-5" />
+        <Skeleton className="h-4 w-2/3 sm:h-5" />
+      </div>
+      <div className="mb-1 flex items-baseline gap-1.5 sm:gap-2">
+        <Skeleton className="h-4 w-20 sm:h-5" />
+        <Skeleton className="h-3 w-14 sm:h-4" />
+      </div>
+      <div className="flex justify-end">
+        <Skeleton className="h-3 w-20 sm:h-4" />
+      </div>
     </div>
   );
 }
