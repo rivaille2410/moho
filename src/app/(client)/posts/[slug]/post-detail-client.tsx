@@ -1,8 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-
-import DOMPurify from "dompurify";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -34,6 +32,42 @@ export default function PostPage({ slug, initialPost }: PostPageProps) {
     refetch,
   } = usePublicPost(slug, initialPost);
   const contentRef = useRef<HTMLDivElement>(null);
+  const postContent = post?.content;
+  const [sanitizedPost, setSanitizedPost] = useState<{
+    source: string;
+    html: string;
+  } | null>(null);
+  const [sanitizationFailure, setSanitizationFailure] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (postContent === undefined) {
+      setSanitizedPost(null);
+      setSanitizationFailure(null);
+      return;
+    }
+
+    setSanitizedPost(null);
+    setSanitizationFailure(null);
+    void import("dompurify")
+      .then(({ default: DOMPurify }) => {
+        if (cancelled) return;
+        setSanitizedPost({
+          source: postContent,
+          html: DOMPurify.sanitize(postContent),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setSanitizationFailure(postContent);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postContent]);
 
   const {
     data: relatedData,
@@ -47,7 +81,10 @@ export default function PostPage({ slug, initialPost }: PostPageProps) {
     relatedData?.pages.flatMap((page) => page.data) ?? []
   ).filter((p) => p.slug !== slug);
 
-  const sanitizedContent = post ? DOMPurify.sanitize(post.content) : "";
+  const contentIsSanitized =
+    postContent !== undefined && sanitizedPost?.source === postContent;
+  const sanitizedContent =
+    contentIsSanitized ? (sanitizedPost?.html ?? "") : "";
   const { toc, activeId } = usePostToc(contentRef, [sanitizedContent]);
 
   const hasToc = toc.length > 0;
@@ -157,11 +194,25 @@ export default function PostPage({ slug, initialPost }: PostPageProps) {
         >
           {hasToc && <PostTableOfContents toc={toc} activeId={activeId} />}
 
-          <div
-            ref={contentRef}
-            className="prose prose-sm max-w-none prose-img:mx-auto prose-img:block prose-img:rounded-lg md:prose-base"
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          />
+          {contentIsSanitized ? (
+            <div
+              ref={contentRef}
+              className="prose prose-sm max-w-none prose-img:mx-auto prose-img:block prose-img:rounded-lg md:prose-base"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            />
+          ) : sanitizationFailure === post.content ? (
+            <p role="alert" className="text-sm text-muted-foreground">
+              Không thể hiển thị nội dung bài viết lúc này. Vui lòng tải lại trang.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          )}
         </div>
 
         {(isLoadingRelated || relatedPosts.length > 0) && (
