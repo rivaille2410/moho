@@ -108,6 +108,30 @@ export function ProductDetailSkeleton() {
           <Skeleton className="mt-4 aspect-video w-full rounded-lg" />
         </div>
       </div>
+
+      <section className="py-6">
+        <div className="mb-6 flex items-baseline justify-between">
+          <Skeleton className="h-7 w-40" />
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="flex flex-col">
+              <Skeleton className="mb-3 aspect-square rounded-md" />
+              <div className="mb-1.5 flex min-h-9.5 flex-col justify-center gap-1">
+                <Skeleton className="h-4 w-full sm:h-5" />
+                <Skeleton className="h-4 w-2/3 sm:h-5" />
+              </div>
+              <div className="mb-1 flex items-baseline gap-1.5 sm:gap-2">
+                <Skeleton className="h-4 w-20 sm:h-5" />
+                <Skeleton className="h-3 w-14 sm:h-4" />
+              </div>
+              <div className="flex justify-end">
+                <Skeleton className="h-3 w-20 sm:h-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

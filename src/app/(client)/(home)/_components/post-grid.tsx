@@ -27,6 +27,7 @@ interface PostGridProps {
   posts: PostListItem[];
   isLoadingMore?: boolean;
   skeletonCount?: number;
+  skeletonRows?: number;
   onLoadMore?: () => void;
 }
 
@@ -44,6 +45,7 @@ export function PostGrid({
   seeMoreHref,
   onLoadMore,
   skeletonCount,
+  skeletonRows,
   isLoadingMore,
   title = "Bài viết",
 }: PostGridProps) {
@@ -58,7 +60,7 @@ export function PostGrid({
     ? posts.slice(0, Math.floor(posts.length / columns) * columns)
     : posts;
 
-  const initialSkeletons = skeletonCount ?? columns;
+  const initialSkeletons = skeletonCount ?? columns * (skeletonRows ?? 1);
 
   // Luôn giữ callback mới nhất mà không làm effect chạy lại
   const onLoadMoreRef = useRef(onLoadMore);
@@ -116,6 +118,12 @@ export function PostGrid({
               Hãy quay lại sau nhé.
             </p>
           </div>
+        </div>
+      ) : isLoading && skeletonRows ? (
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          {Array.from({ length: initialSkeletons }).map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <Carousel

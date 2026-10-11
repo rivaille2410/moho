@@ -42,6 +42,10 @@ export default function PostPage({ slug, initialPost }: PostPageProps) {
   );
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
+  useEffect(() => {
     let cancelled = false;
 
     if (postContent === undefined) {
@@ -217,7 +221,7 @@ export default function PostPage({ slug, initialPost }: PostPageProps) {
 
         {(isLoadingRelated || relatedPosts.length > 0) && (
           <PostGrid
-            skeletonCount={6}
+            skeletonRows={2}
             title="Bài viết khác"
             hasMore={hasMoreRelated}
             posts={relatedPosts}

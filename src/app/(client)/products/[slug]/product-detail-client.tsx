@@ -622,7 +622,7 @@ export default function ProductPage({ slug, initialProduct }: ProductPageProps) 
 
         {(isLoadingRelated || relatedProducts.length > 0) && (
           <ProductGrid
-            skeletonCount={6}
+            skeletonCount={12}
             hasMore={hasMoreRelated}
             title="Sản phẩm tương tự"
             products={relatedProducts}

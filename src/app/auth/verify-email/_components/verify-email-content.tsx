@@ -95,7 +95,7 @@ export function VerifyEmailContent() {
           description: "Xác thực email thành công!",
         });
 
-        setTimeout(() => router.push("/"), 1500);
+        setTimeout(() => router.push("/?auth=required"), 1500);
       } catch {
         const message = "Có lỗi xảy ra. Vui lòng kiểm tra kết nối và thử lại.";
         setStatus("error");
