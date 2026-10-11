@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { ReactNode } from "react";
 
 import { ChevronDown, PackageOpen } from "lucide-react";
 
@@ -21,7 +22,7 @@ const mobileOnlyPreview = (index: number, collapsed: boolean) =>
   collapsed && index >= MOBILE_PREVIEW_COUNT && "max-sm:hidden";
 
 interface ProductGridProps {
-  title?: string;
+  title?: ReactNode;
   hasMore?: boolean;
   isLoading: boolean;
   seeMoreHref?: string;

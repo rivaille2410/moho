@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -18,9 +19,13 @@ export function PublicApiLoadingHint({ className }: { className?: string }) {
     <p
       role="status"
       aria-live="polite"
-      className={cn("text-center text-sm text-muted-foreground", className)}
+      className={cn(
+        "flex items-center justify-center gap-2 text-center text-sm text-muted-foreground",
+        className,
+      )}
     >
-      Máy chủ đang khởi động. Vui lòng chờ thêm một chút.
+      <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+      Máy chủ đang khởi động. Trang sẽ tự tải khi kết nối lại.
     </p>
   );
 }

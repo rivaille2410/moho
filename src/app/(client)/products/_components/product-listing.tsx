@@ -329,7 +329,6 @@ export function ProductListing({
       limit: pageSize,
       search: debouncedSearch || undefined,
       categoryId: activeCategoryId,
-      outOfStock: filters.inStockOnly ? false : undefined,
       onSale: filters.onSale ? true : undefined,
       colors: filters.colors.length ? filters.colors : undefined,
       minPrice: min !== undefined && !Number.isNaN(min) ? min : undefined,
@@ -342,7 +341,6 @@ export function ProductListing({
     debouncedMinPrice,
     debouncedMaxPrice,
     activeCategoryId,
-    filters.inStockOnly,
     filters.onSale,
     filters.colors,
     filters.sortBy,
@@ -366,12 +364,25 @@ export function ProductListing({
     [data],
   );
   const totalItems = data?.pages[0]?.meta.totalItems;
+  const productsForDisplay = useMemo(
+    () =>
+      filters.inStockOnly
+        ? allProducts.filter((product) => product.totalStock > 0)
+        : allProducts,
+    [allProducts, filters.inStockOnly],
+  );
+  const displayTotalItems = filters.inStockOnly
+    ? hasNextPage
+      ? undefined
+      : productsForDisplay.length
+    : totalItems;
 
   const visibleProducts = useMemo(() => {
-    if (!hasNextPage) return allProducts;
-    const fullRowsCount = Math.floor(allProducts.length / columns) * columns;
-    return allProducts.slice(0, fullRowsCount);
-  }, [allProducts, hasNextPage, columns]);
+    if (!hasNextPage) return productsForDisplay;
+    const fullRowsCount =
+      Math.floor(productsForDisplay.length / columns) * columns;
+    return productsForDisplay.slice(0, fullRowsCount);
+  }, [productsForDisplay, hasNextPage, columns]);
 
   const initialSkeletonCount = columns * INITIAL_SKELETON_ROWS;
   const loadMoreSkeletonCount =
@@ -384,6 +395,31 @@ export function ProductListing({
     hasError: isFetchNextPageError,
     onLoadMore: () => fetchNextPage(),
   });
+
+  useEffect(() => {
+    if (
+      !filters.inStockOnly ||
+      isLoading ||
+      isFetchingNextPage ||
+      isFetchNextPageError ||
+      !hasNextPage ||
+      allProducts.length === 0 ||
+      productsForDisplay.length > 0
+    ) {
+      return;
+    }
+
+    void fetchNextPage();
+  }, [
+    filters.inStockOnly,
+    isLoading,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    hasNextPage,
+    allProducts.length,
+    productsForDisplay.length,
+    fetchNextPage,
+  ]);
 
   const sortChanged = showSort && filters.sortBy !== DEFAULT_SORT;
 
@@ -468,9 +504,9 @@ export function ProductListing({
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
             {title}
-            {typeof totalItems === "number" && (
+            {typeof displayTotalItems === "number" && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({totalItems})
+                ({displayTotalItems})
               </span>
             )}
           </h1>
@@ -1025,7 +1061,9 @@ export function ProductListing({
             onRetry={() => void refetch()}
             isRetrying={isFetching}
           />
-        ) : !isLoading && allProducts.length === 0 ? (
+        ) : !isLoading &&
+          !hasNextPage &&
+          productsForDisplay.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
             <p className="text-lg font-medium">Không tìm thấy sản phẩm</p>
             <p className="text-sm text-muted-foreground">

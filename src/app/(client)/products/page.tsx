@@ -28,7 +28,6 @@ export default async function ProductsPage({
       limit: 16,
       search,
       categoryId,
-      outOfStock: false,
       sortBy: "newest",
     });
   } catch {

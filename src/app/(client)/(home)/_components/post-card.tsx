@@ -61,9 +61,18 @@ export function PostCardSkeleton() {
   return (
     <div className="flex flex-col">
       <Skeleton className="mb-3 aspect-video rounded-md" />
-      <Skeleton className="mb-1.5 h-4 w-full" />
-      <Skeleton className="mb-1 h-4 w-2/3" />
-      <Skeleton className="h-3 w-1/2" />
+      <div className="mb-1.5 flex min-h-9.5 flex-col justify-center gap-1">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="mb-2 flex flex-col gap-1">
+        <Skeleton className="h-3.5 w-full sm:h-4" />
+        <Skeleton className="h-3.5 w-2/3 sm:h-4" />
+      </div>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-3 w-16 sm:h-4" />
+        <Skeleton className="h-3 w-10 sm:h-4" />
+      </div>
     </div>
   );
 }
