@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { Search, SlidersHorizontal, X } from "lucide-react";
@@ -67,7 +67,7 @@ const PRICE_PRESETS = [
   { label: "Trên 5 triệu", min: "5000000", max: "" },
 ];
 
-const INITIAL_SKELETON_ROWS = 4;
+const INITIAL_SKELETON_ROWS = 2;
 const LOAD_MORE_SKELETON_ROWS = 2;
 
 const TARGET_PAGE_SIZE = 16;
@@ -209,6 +209,13 @@ export function ProductListing({
   const urlCategoryId = searchParams.get("categoryId");
   const urlSubCategoryId = searchParams.get("subCategoryId");
   const urlSearch = searchParams.get("search") ?? "";
+  // Server data belongs only to the URL filters used to fetch it. Passing it
+  // as initialData for every query key makes newly selected categories appear
+  // to return the previous category's products.
+  const initialQueryFilters = useRef({
+    categoryId: urlSubCategoryId ?? urlCategoryId,
+    search: urlSearch,
+  });
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
@@ -386,7 +393,11 @@ export function ProductListing({
     refetch,
   } = useProducts(
     params,
-    hasClientOnlyFilters ? undefined : initialPage,
+    !hasClientOnlyFilters &&
+      params.categoryId === (initialQueryFilters.current.categoryId ?? undefined) &&
+      params.search === (initialQueryFilters.current.search || undefined)
+      ? initialPage
+      : undefined,
   );
 
   const allProducts = useMemo(
@@ -465,6 +476,7 @@ export function ProductListing({
   }, [productsForDisplay, hasNextPage, columns]);
 
   const initialSkeletonCount = columns * INITIAL_SKELETON_ROWS;
+  const isRefreshingProducts = isFetching && !isFetchingNextPage;
   const loadMoreSkeletonCount =
     ((columns - (visibleProducts.length % columns)) % columns) +
     columns * LOAD_MORE_SKELETON_ROWS;
@@ -1272,7 +1284,7 @@ export function ProductListing({
             onRetry={() => void refetch()}
             isRetrying={isFetching}
           />
-        ) : !isLoading &&
+        ) : !isRefreshingProducts &&
           !hasNextPage &&
           productsForDisplay.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
@@ -1289,7 +1301,7 @@ export function ProductListing({
         ) : (
           <>
             <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {isLoading
+              {isRefreshingProducts
                 ? Array.from({ length: initialSkeletonCount }).map((_, i) => (
                     <ProductCardSkeleton key={i} />
                   ))
@@ -1303,7 +1315,9 @@ export function ProductListing({
                 ))}
             </div>
 
-            {isLoading && <PublicApiLoadingHint className="mt-4" />}
+            {isRefreshingProducts && (
+              <PublicApiLoadingHint className="mt-4" />
+            )}
 
             {hasNextPage && <div ref={sentinelRef} className="h-px" />}
 
@@ -1315,7 +1329,7 @@ export function ProductListing({
               />
             )}
 
-            {!hasNextPage && !isLoading && allProducts.length > 0 && (
+            {!hasNextPage && !isRefreshingProducts && allProducts.length > 0 && (
               <p className="mt-8 text-center text-sm text-muted-foreground">
                 Đã hiển thị tất cả sản phẩm
               </p>
@@ -1364,7 +1378,17 @@ export function ProductListingSkeleton({
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {Array.from({ length: 12 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
+            <div
+              key={i}
+              className={cn(
+                i >= 4 && "hidden sm:block",
+                i >= 6 && "sm:hidden lg:block",
+                i >= 8 && "lg:hidden xl:block",
+                i >= 10 && "xl:hidden 2xl:block",
+              )}
+            >
+              <ProductCardSkeleton />
+            </div>
           ))}
         </div>
       </div>
