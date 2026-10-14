@@ -1,7 +1,9 @@
 import { Address } from "@/types/address";
 
 export const formatAddress = (a: Address) =>
-  [a.addressDetail, a.wardName, a.provinceName].filter(Boolean).join(", ");
+  [a.addressDetail, a.wardName, a.districtName, a.provinceName]
+    .filter(Boolean)
+    .join(", ");
 
 export const formatPhone = (phone: string) =>
   phone.startsWith("+84") ? "0" + phone.slice(3) : phone;

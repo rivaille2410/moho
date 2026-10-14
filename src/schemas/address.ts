@@ -11,6 +11,11 @@ export const addressSchema = z.object({
     .number({ message: "Vui lòng chọn tỉnh/thành" })
     .int()
     .positive("Vui lòng chọn tỉnh/thành"),
+  districtName: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập quận/huyện")
+    .max(100, "Quận/huyện tối đa 100 ký tự"),
   wardCode: z
     .number({ message: "Vui lòng chọn phường/xã" })
     .int()

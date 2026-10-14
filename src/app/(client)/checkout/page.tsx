@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   X,
@@ -48,9 +48,17 @@ import { toLocalDigits } from "@/features/addresses/utils/format-address";
 import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useValidateVoucher } from "@/features/vouchers/hooks/use-validate-voucher";
 import { CheckoutAddressPicker } from "@/features/addresses/components/checkout-address-picker";
+import { useShippingFee } from "@/features/shipping/hooks/use-shipping-fee";
+import { toast } from "@/components/ui/toast";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
+
+const getLocalDateString = () => {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+};
 
 const BANK_INFO = {
   bin: "970436",
@@ -74,17 +82,15 @@ export default function CheckoutPage() {
 
   const savedInfo = useCheckoutInfoStore((s) => s.info);
   const checkoutInfoHydrated = useCheckoutInfoStore((s) => s.hasHydrated);
-  const setCheckoutInfo = useCheckoutInfoStore((s) => s.setInfo);
 
   const { data: addressData, isLoading: isLoadingAddresses } = useAddresses();
-  const addresses = addressData?.data ?? [];
+  const addresses = useMemo(() => addressData?.data ?? [], [addressData?.data]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
   const [addressPicked, setAddressPicked] = useState(false);
 
   const {
-    reset,
     register,
     handleSubmit,
     control,
@@ -104,6 +110,14 @@ export default function CheckoutPage() {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+  const [todayDate, setTodayDate] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+
+  useEffect(() => {
+    const today = getLocalDateString();
+    setTodayDate(today);
+    setDeliveryDate(today);
+  }, []);
 
   const [voucherInput, setVoucherInput] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<{
@@ -113,35 +127,36 @@ export default function CheckoutPage() {
   } | null>(null);
   const validateVoucher = useValidateVoucher();
 
-  const applyAddress = (address: Address) => {
-    setSelectedAddressId(address.id);
-    setValue("fullName", address.recipientName, { shouldValidate: true });
-    setValue("phone", toLocalDigits(address.recipientPhone), {
-      shouldValidate: true,
-    });
-    setValue("provinceCode", address.provinceCode, { shouldValidate: true });
-    setValue("wardCode", address.wardCode, { shouldValidate: true });
-    setValue("addressDetail", address.addressDetail, { shouldValidate: true });
-  };
-
-  const handleUseManual = () => {
-    setSelectedAddressId(null);
-    reset({
-      fullName: me?.name ?? "",
-      phone: "",
-      provinceCode: undefined,
-      wardCode: undefined,
-      addressDetail: "",
-      note: watch("note"),
-    });
-  };
+  const applyAddress = useCallback(
+    (address: Address) => {
+      setSelectedAddressId(address.id);
+      setValue("fullName", address.recipientName, { shouldValidate: true });
+      setValue("phone", toLocalDigits(address.recipientPhone), {
+        shouldValidate: true,
+      });
+      setValue("provinceCode", address.provinceCode, { shouldValidate: true });
+      setValue("wardCode", address.wardCode, { shouldValidate: true });
+      setValue("addressDetail", address.addressDetail, {
+        shouldValidate: true,
+      });
+    },
+    [setValue],
+  );
 
   useEffect(() => {
     if (addressPicked || addresses.length === 0) return;
     const def = addresses.find((a) => a.isDefault) ?? addresses[0];
     applyAddress(def);
     setAddressPicked(true);
-  }, [addresses, addressPicked]);
+  }, [addresses, addressPicked, applyAddress]);
+
+  useEffect(() => {
+    if (!selectedAddressId) return;
+    const selectedAddress = addresses.find(
+      (address) => address.id === selectedAddressId,
+    );
+    if (selectedAddress) applyAddress(selectedAddress);
+  }, [addresses, selectedAddressId, applyAddress]);
 
   useEffect(() => {
     if (!checkoutInfoHydrated || isLoadingAddresses) return;
@@ -166,6 +181,7 @@ export default function CheckoutPage() {
     addresses.length,
     savedInfo,
     me?.name,
+    setValue,
   ]);
 
   const provinceCode = watch("provinceCode");
@@ -174,24 +190,33 @@ export default function CheckoutPage() {
   const { data: wards, isLoading: isLoadingWards } =
     useProvinceWards(provinceCode);
 
-  const shippingFee = 0;
+  const shippingItems = useMemo(
+    () => items.map(({ variantId, quantity }) => ({ variantId, quantity })),
+    [items],
+  );
+  const shippingInput =
+    selectedAddressId && deliveryDate && shippingItems.length
+      ? { addressId: selectedAddressId, deliveryDate, items: shippingItems }
+      : null;
+  const {
+    data: shippingQuote,
+    isFetching: isCalculatingShipping,
+    isError: isShippingError,
+    error: shippingError,
+  } = useShippingFee(shippingInput);
+  const shippingFee = shippingQuote?.fee ?? 0;
   const discountAmount = appliedVoucher?.discountAmount ?? 0;
-  const grandTotal = Math.max(totalPrice + shippingFee - discountAmount, 0);
+  const paymentSubtotal = shippingQuote?.subtotal ?? totalPrice;
+  const grandTotal = Math.max(
+    paymentSubtotal + shippingFee - discountAmount,
+    0,
+  );
 
   const previewRef = "MOHO" + Date.now().toString().slice(-8);
 
   const vietqrUrl = `https://img.vietqr.io/image/${BANK_INFO.bin}-${BANK_INFO.accountNo}-compact2.png?amount=${grandTotal}&addInfo=${encodeURIComponent(
     previewRef,
   )}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`;
-
-  const buildFullAddress = (data: CheckoutFormValues) => {
-    const province = provinces?.find((p) => p.code === data.provinceCode);
-    const ward = wards?.find((w) => w.code === data.wardCode);
-
-    return [data.addressDetail.trim(), ward?.name, province?.name]
-      .filter(Boolean)
-      .join(", ");
-  };
 
   const buildOrderItems = (): CreateOrderItemInput[] =>
     items.map((item) => ({
@@ -231,31 +256,24 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormValues) => {
     if (items.length === 0) return;
+    if (!selectedAddressId || !shippingQuote || !deliveryDate) {
+      toast.add({
+        type: "error",
+        description: "Vui lòng chọn địa chỉ giao hàng để tính phí vận chuyển.",
+        priority: "high",
+      });
+      return;
+    }
 
     try {
-      const fullAddress = buildFullAddress(data);
-      const fullPhone = `+84${data.phone}`;
-
       const order = await createOrder({
-        recipientName: data.fullName.trim(),
-        recipientPhone: fullPhone,
-        shippingAddress: fullAddress,
-        addressId: selectedAddressId ?? undefined,
+        addressId: selectedAddressId,
+        deliveryDate,
         note: data.note?.trim() || undefined,
         paymentMethod,
         items: buildOrderItems(),
         voucherCode: appliedVoucher?.code,
       });
-
-      if (!selectedAddressId) {
-        setCheckoutInfo({
-          fullName: data.fullName.trim(),
-          phone: data.phone,
-          provinceCode: data.provinceCode,
-          wardCode: data.wardCode,
-          addressDetail: data.addressDetail.trim(),
-        });
-      }
 
       clear();
       router.push(`/checkout/success?ref=${order.orderNumber}`);
@@ -402,7 +420,6 @@ export default function CheckoutPage() {
               addresses={addresses}
               selectedId={selectedAddressId}
               onSelect={applyAddress}
-              onUseManual={handleUseManual}
             />
 
             <div className="rounded-lg border p-4 space-y-4">
@@ -421,10 +438,25 @@ export default function CheckoutPage() {
 
               {selectedAddressId ? (
                 <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                  Đang dùng địa chỉ đã lưu. Mọi chỉnh sửa bên dưới chỉ áp dụng
-                  cho đơn hàng này, sổ địa chỉ của bạn không thay đổi.
+                  Phí giao hàng được tính theo địa chỉ đã chọn. Muốn đổi thông
+                  tin, hãy sửa địa chỉ trong danh sách phía trên.
                 </p>
               ) : null}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="deliveryDate">Ngày dự kiến giao hàng</Label>
+                <Input
+                  id="deliveryDate"
+                  type="date"
+                  min={todayDate || undefined}
+                  value={deliveryDate}
+                  onChange={(event) => setDeliveryDate(event.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Phí ship sẽ được tính lại theo địa chỉ và ngày giao hàng.
+                </p>
+              </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="fullName">
@@ -433,6 +465,7 @@ export default function CheckoutPage() {
                 <Input
                   id="fullName"
                   {...register("fullName")}
+                  readOnly={Boolean(selectedAddressId)}
                   placeholder="Nhập họ và tên"
                 />
                 {errors.fullName ? (
@@ -458,6 +491,7 @@ export default function CheckoutPage() {
                         id="phone"
                         inputMode="numeric"
                         value={field.value}
+                        readOnly={Boolean(selectedAddressId)}
                         onChange={(e) => {
                           const digitsOnly = e.target.value
                             .replace(/\D/g, "")
@@ -488,6 +522,7 @@ export default function CheckoutPage() {
                     render={({ field }) => (
                       <Select
                         value={field.value ? String(field.value) : ""}
+                        disabled={Boolean(selectedAddressId)}
                         onValueChange={(value) => {
                           if (!value) return;
                           field.onChange(Number(value));
@@ -543,7 +578,7 @@ export default function CheckoutPage() {
                           if (!value) return;
                           field.onChange(Number(value));
                         }}
-                        disabled={!provinceCode}
+                        disabled={Boolean(selectedAddressId) || !provinceCode}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue>
@@ -588,6 +623,7 @@ export default function CheckoutPage() {
                 <Input
                   id="addressDetail"
                   {...register("addressDetail")}
+                  readOnly={Boolean(selectedAddressId)}
                   placeholder="Số nhà, tên đường..."
                 />
                 {errors.addressDetail ? (
@@ -656,7 +692,15 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {paymentMethod === "BANK_TRANSFER" ? (
+              {paymentMethod === "BANK_TRANSFER" && !shippingQuote ? (
+                <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
+                  Mã QR sẽ hiển thị sau khi chọn địa chỉ và tính xong phí vận chuyển.
+                </p>
+              ) : null}
+
+              {paymentMethod === "BANK_TRANSFER" &&
+              shippingQuote &&
+              !isShippingError ? (
                 <div className="flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-4">
                   <div className="relative size-72 overflow-hidden rounded-xl border bg-white">
                     <Image
@@ -888,7 +932,7 @@ export default function CheckoutPage() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Tạm tính</span>
-                <span className="font-medium">{formatVND(totalPrice)}</span>
+                <span className="font-medium">{formatVND(paymentSubtotal)}</span>
               </div>
               {appliedVoucher ? (
                 <div className="flex items-center justify-between">
@@ -901,9 +945,32 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Phí vận chuyển</span>
                 <span className="font-medium">
-                  {shippingFee > 0 ? formatVND(shippingFee) : "Miễn phí"}
+                  {isCalculatingShipping
+                    ? "Đang tính phí…"
+                    : shippingQuote
+                      ? shippingQuote.isFreeShip
+                        ? "Miễn phí"
+                        : formatVND(shippingQuote.fee)
+                      : selectedAddressId
+                        ? "Chưa tính được"
+                        : "Chọn địa chỉ"}
                 </span>
               </div>
+              {shippingQuote ? (
+                <p className="text-xs text-muted-foreground">
+                  {shippingQuote.zoneName}
+                  {shippingQuote.amountToFreeShip !== null
+                    ? ` · Mua thêm ${formatVND(shippingQuote.amountToFreeShip)} để được miễn phí ship`
+                    : ""}
+                </p>
+              ) : null}
+              {isShippingError ? (
+                <p className="text-xs text-destructive">
+                  {shippingError instanceof Error
+                    ? shippingError.message
+                    : "Không thể tính phí vận chuyển. Hãy kiểm tra địa chỉ."}
+                </p>
+              ) : null}
             </div>
 
             <div className="h-px bg-border" />
@@ -919,7 +986,17 @@ export default function CheckoutPage() {
               {isSubmitting ? (
                 <Skeleton className="h-12 w-full" />
               ) : (
-                <Button type="submit" size="xl" className="w-full">
+                <Button
+                  type="submit"
+                  size="xl"
+                  className="w-full"
+                  disabled={
+                    !selectedAddressId ||
+                    !shippingQuote ||
+                    isCalculatingShipping ||
+                    isShippingError
+                  }
+                >
                   Đặt hàng
                 </Button>
               )}
