@@ -41,6 +41,7 @@ export function useUpdateAddress() {
     mutationFn: updateAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping-fee"] });
       toast.add({ type: "success", description: "Đã cập nhật địa chỉ" });
     },
     onError: (error: Error) => {

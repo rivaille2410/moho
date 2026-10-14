@@ -86,10 +86,8 @@ export type CreateOrderItemInput = {
 };
 
 export type CreateOrderInput = {
-  recipientName: string;
-  recipientPhone: string;
-  shippingAddress: string;
-  addressId?: string;
+  addressId: string;
+  deliveryDate: string;
   note?: string;
   voucherCode?: string;
   paymentMethod?: PaymentMethod;

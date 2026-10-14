@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+﻿import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { getBackendApiBaseUrl, withBackendTimeout } from "@/lib/backend-api";
 
@@ -38,22 +38,46 @@ interface Tokens {
   refreshToken: string;
 }
 
-async function refreshTokens(refreshToken: string): Promise<Tokens | null> {
-  const res = await fetch(
-    `${getBackendApiBaseUrl()}/auth/refresh`,
-    withBackendTimeout({
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    }),
+type RefreshResult =
+  | { kind: "success"; tokens: Tokens }
+  | { kind: "invalid" }
+  | { kind: "unavailable" };
+
+async function refreshTokens(refreshToken: string): Promise<RefreshResult> {
+  let res: Response;
+  try {
+    res = await fetch(
+      `${getBackendApiBaseUrl()}/auth/refresh`,
+      withBackendTimeout({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      }),
+    );
+  } catch {
+    return { kind: "unavailable" };
+  }
+
+  if (res.status === 401 || res.status === 403) {
+    return { kind: "invalid" };
+  }
+  if (!res.ok) return { kind: "unavailable" };
+
+  const data = await res.json().catch(() => null);
+  if (!data?.accessToken || !data?.refreshToken) {
+    return { kind: "unavailable" };
+  }
+  return {
+    kind: "success",
+    tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
+  };
+}
+
+function serviceUnavailableResponse() {
+  return new Response(
+    JSON.stringify({ message: "Authentication service temporarily unavailable" }),
+    { status: 503, headers: { "Content-Type": "application/json" } },
   );
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  if (!data?.accessToken || !data?.refreshToken) return null;
-
-  return { accessToken: data.accessToken, refreshToken: data.refreshToken };
 }
 
 export async function fetchWithAuth(path: string, init: RequestInit = {}) {
@@ -91,17 +115,20 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
     return { res: null, unauthorized: true as const };
   }
 
-  const newTokens = await refreshTokens(refreshToken);
-  if (!newTokens) {
+  const refreshResult = await refreshTokens(refreshToken);
+  if (refreshResult.kind === "unavailable") {
+    return { res: serviceUnavailableResponse(), unauthorized: false as const };
+  }
+  if (refreshResult.kind === "invalid") {
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
     return { res: null, unauthorized: true as const };
   }
 
-  cookieStore.set("accessToken", newTokens.accessToken, COOKIE_OPTS);
-  cookieStore.set("refreshToken", newTokens.refreshToken, COOKIE_OPTS);
+  cookieStore.set("accessToken", refreshResult.tokens.accessToken, COOKIE_OPTS);
+  cookieStore.set("refreshToken", refreshResult.tokens.refreshToken, COOKIE_OPTS);
 
-  const res = await callBackend(newTokens.accessToken);
+  const res = await callBackend(refreshResult.tokens.accessToken);
   return { res, unauthorized: false as const };
 }
 
@@ -137,15 +164,18 @@ export async function fetchOptionalAuth(path: string, init: RequestInit = {}) {
     return callBackend();
   }
 
-  const newTokens = await refreshTokens(refreshToken);
-  if (!newTokens) {
+  const refreshResult = await refreshTokens(refreshToken);
+  if (refreshResult.kind === "unavailable") {
+    return serviceUnavailableResponse();
+  }
+  if (refreshResult.kind === "invalid") {
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
     return callBackend();
   }
 
-  cookieStore.set("accessToken", newTokens.accessToken, COOKIE_OPTS);
-  cookieStore.set("refreshToken", newTokens.refreshToken, COOKIE_OPTS);
+  cookieStore.set("accessToken", refreshResult.tokens.accessToken, COOKIE_OPTS);
+  cookieStore.set("refreshToken", refreshResult.tokens.refreshToken, COOKIE_OPTS);
 
-  return callBackend(newTokens.accessToken);
+  return callBackend(refreshResult.tokens.accessToken);
 }

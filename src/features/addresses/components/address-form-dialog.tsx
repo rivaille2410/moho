@@ -46,6 +46,7 @@ const EMPTY_VALUES: AddressFormValues = {
   recipientName: "",
   recipientPhone: "",
   provinceCode: undefined as unknown as number,
+  districtName: "",
   wardCode: undefined as unknown as number,
   addressDetail: "",
   isDefault: false,
@@ -89,6 +90,7 @@ export function AddressFormDialog({
         recipientName: address.recipientName,
         recipientPhone: toLocalDigits(address.recipientPhone),
         provinceCode: address.provinceCode,
+        districtName: address.districtName ?? "",
         wardCode: address.wardCode,
         addressDetail: address.addressDetail,
         isDefault: address.isDefault,
@@ -108,6 +110,7 @@ export function AddressFormDialog({
       recipientPhone: `+84${values.recipientPhone}`,
       provinceCode: province.code,
       provinceName: province.name,
+      districtName: values.districtName.trim(),
       wardCode: ward.code,
       wardName: ward.name,
       addressDetail: values.addressDetail.trim(),
@@ -288,6 +291,20 @@ export function AddressFormDialog({
                 </p>
               ) : null}
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="districtName">Quận/Huyện</Label>
+            <Input
+              id="districtName"
+              placeholder="Nhập quận/huyện theo địa chỉ"
+              {...register("districtName")}
+            />
+            {errors.districtName ? (
+              <p className="text-xs text-destructive">
+                {errors.districtName.message}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">

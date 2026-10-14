@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+﻿import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
@@ -10,12 +10,9 @@ export async function POST(request: NextRequest) {
   if (refreshToken) {
     await fetch(`${apiUrl}/auth/logout`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${refreshToken}`,
-      },
-      body: JSON.stringify({}),
-    });
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => undefined);
   }
 
   const response = NextResponse.json({ message: "Logged out" });

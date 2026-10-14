@@ -24,6 +24,7 @@ export type Address = {
   recipientPhone: string;
   provinceCode: number;
   provinceName: string;
+  districtName: string | null;
   wardCode: number;
   wardName: string;
   addressDetail: string;
@@ -42,6 +43,7 @@ export type CreateAddressInput = {
   recipientPhone: string;
   provinceCode: number;
   provinceName: string;
+  districtName: string;
   wardCode: number;
   wardName: string;
   addressDetail: string;
