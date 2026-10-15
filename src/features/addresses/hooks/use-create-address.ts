@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/ui/toast";
-import { Address, CreateAddressInput } from "@/types/address";
+import { Address, AddressesResponse, CreateAddressInput } from "@/types/address";
+import { queryKeys } from "@/lib/query-keys";
 
 const ERROR_MESSAGES: Record<string, string> = {
   ADDRESS_LIMIT_REACHED: "Bạn chỉ có thể lưu tối đa 10 địa chỉ.",
@@ -22,7 +23,8 @@ async function createAddress(input: CreateAddressInput): Promise<Address> {
       "Không thể thêm địa chỉ";
     throw new Error(message);
   }
-  return data;
+  // The API may return the created address directly or inside a `data` envelope.
+  return data?.data ?? data;
 }
 
 export function useCreateAddress() {
@@ -30,8 +32,17 @@ export function useCreateAddress() {
 
   return useMutation({
     mutationFn: createAddress,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+    onSuccess: (address) => {
+      queryClient.setQueryData<AddressesResponse>(
+        queryKeys.addresses.list(),
+        (current) => ({
+          data: [
+            address,
+            ...(current?.data ?? []).filter((item) => item.id !== address.id),
+          ],
+        }),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["addresses"] });
       toast.add({ type: "success", description: "Đã thêm địa chỉ mới" });
     },
     onError: (error: Error) => {
