@@ -43,7 +43,6 @@ export type CreateAddressInput = {
   recipientPhone: string;
   provinceCode: number;
   provinceName: string;
-  districtName: string;
   wardCode: number;
   wardName: string;
   addressDetail: string;

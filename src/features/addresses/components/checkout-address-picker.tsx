@@ -1,27 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Check, PencilLine, Plus } from "lucide-react";
+import { Check, PencilLine, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { AddressFormDialog } from "./address-form-dialog";
 import { cn } from "@/lib/utils";
 import { Address } from "@/types/address";
 import { formatAddress, formatPhone } from "../utils/format-address";
+import { useDeleteAddress } from "../hooks/use-delete-address";
+import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 
 interface CheckoutAddressPickerProps {
   addresses: Address[];
   selectedId: string | null;
   onSelect: (address: Address) => void;
+  onDeleted: (address: Address) => void;
 }
 
 export function CheckoutAddressPicker({
   addresses,
   selectedId,
   onSelect,
+  onDeleted,
 }: CheckoutAddressPickerProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
+  const deleteAddress = useDeleteAddress();
+
+  if (addresses.length === 0) return null;
 
   return (
     <div className="space-y-3 rounded-lg border p-4">
@@ -41,13 +49,8 @@ export function CheckoutAddressPicker({
         </Button>
       </div>
 
-      {addresses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Thêm địa chỉ giao hàng để hệ thống tự tính phí vận chuyển.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {addresses.map((address) => {
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {addresses.map((address) => {
             const isSelected = address.id === selectedId;
 
             return (
@@ -94,11 +97,6 @@ export function CheckoutAddressPicker({
                     <span className="block line-clamp-2 text-xs text-muted-foreground">
                       {formatAddress(address)}
                     </span>
-                    {!address.districtName ? (
-                      <span className="block text-xs text-destructive">
-                        Cần bổ sung quận/huyện để tính phí ship
-                      </span>
-                    ) : null}
                   </span>
                 </button>
                 <Button
@@ -113,17 +111,50 @@ export function CheckoutAddressPicker({
                 >
                   <PencilLine className="size-4" />
                 </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Xóa địa chỉ ${address.recipientName}`}
+                  disabled={deleteAddress.isPending}
+                  onClick={() => setDeletingAddress(address)}
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
               </div>
             );
-          })}
-        </div>
-      )}
+        })}
+      </div>
 
       <AddressFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         address={editingAddress}
         isFirstAddress={addresses.length === 0}
+        onAddressCreated={onSelect}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(deletingAddress)}
+        onOpenChange={(open) => {
+          if (!open) setDeletingAddress(null);
+        }}
+        icon={<Trash2 className="size-5" />}
+        title="Xóa địa chỉ này?"
+        description={deletingAddress ? formatAddress(deletingAddress) : null}
+        confirmLabel="Xóa"
+        pendingLabel="Đang xóa..."
+        isPending={deleteAddress.isPending}
+        variant="destructive"
+        onConfirm={() => {
+          if (!deletingAddress) return;
+          deleteAddress.mutate(deletingAddress.id, {
+            onSuccess: () => {
+              onDeleted(deletingAddress);
+              setDeletingAddress(null);
+            },
+          });
+        }}
       />
     </div>
   );

@@ -37,28 +37,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 import { useProvinces } from "@/features/addresses/hooks/use-provinces";
 import { useAddresses } from "@/features/addresses/hooks/use-addresses";
+import { useCreateAddress } from "@/features/addresses/hooks/use-create-address";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useCreateOrder } from "@/features/orders/hooks/use-create-order";
 import { toLocalDigits } from "@/features/addresses/utils/format-address";
 import { useProvinceWards } from "@/features/addresses/hooks/use-province-wards";
 import { useValidateVoucher } from "@/features/vouchers/hooks/use-validate-voucher";
 import { CheckoutAddressPicker } from "@/features/addresses/components/checkout-address-picker";
-import { useShippingFee } from "@/features/shipping/hooks/use-shipping-fee";
 import { toast } from "@/components/ui/toast";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
-
-const getLocalDateString = () => {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 10);
-};
 
 const BANK_INFO = {
   bin: "970436",
@@ -79,6 +74,7 @@ export default function CheckoutPage() {
 
   const { data: me } = useCurrentUser();
   const { mutateAsync: createOrder } = useCreateOrder();
+  const { mutateAsync: createAddress } = useCreateAddress();
 
   const savedInfo = useCheckoutInfoStore((s) => s.info);
   const checkoutInfoHydrated = useCheckoutInfoStore((s) => s.hasHydrated);
@@ -96,6 +92,7 @@ export default function CheckoutPage() {
     control,
     watch,
     setValue,
+    resetField,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -110,14 +107,7 @@ export default function CheckoutPage() {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
-  const [todayDate, setTodayDate] = useState("");
-  const [deliveryDate, setDeliveryDate] = useState("");
-
-  useEffect(() => {
-    const today = getLocalDateString();
-    setTodayDate(today);
-    setDeliveryDate(today);
-  }, []);
+  const [submitPhase, setSubmitPhase] = useState<"saving-address" | "creating-order" | null>(null);
 
   const [voucherInput, setVoucherInput] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<{
@@ -190,27 +180,8 @@ export default function CheckoutPage() {
   const { data: wards, isLoading: isLoadingWards } =
     useProvinceWards(provinceCode);
 
-  const shippingItems = useMemo(
-    () => items.map(({ variantId, quantity }) => ({ variantId, quantity })),
-    [items],
-  );
-  const shippingInput =
-    selectedAddressId && deliveryDate && shippingItems.length
-      ? { addressId: selectedAddressId, deliveryDate, items: shippingItems }
-      : null;
-  const {
-    data: shippingQuote,
-    isFetching: isCalculatingShipping,
-    isError: isShippingError,
-    error: shippingError,
-  } = useShippingFee(shippingInput);
-  const shippingFee = shippingQuote?.fee ?? 0;
   const discountAmount = appliedVoucher?.discountAmount ?? 0;
-  const paymentSubtotal = shippingQuote?.subtotal ?? totalPrice;
-  const grandTotal = Math.max(
-    paymentSubtotal + shippingFee - discountAmount,
-    0,
-  );
+  const grandTotal = Math.max(totalPrice - discountAmount, 0);
 
   const previewRef = "MOHO" + Date.now().toString().slice(-8);
 
@@ -256,19 +227,44 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormValues) => {
     if (items.length === 0) return;
-    if (!selectedAddressId || !shippingQuote || !deliveryDate) {
-      toast.add({
-        type: "error",
-        description: "Vui lòng chọn địa chỉ giao hàng để tính phí vận chuyển.",
-        priority: "high",
-      });
-      return;
-    }
 
     try {
+      let addressId = selectedAddressId;
+      if (!addressId) {
+        setSubmitPhase("saving-address");
+        const province = provinces?.find(
+          (item) => item.code === data.provinceCode,
+        );
+        const ward = wards?.find((item) => item.code === data.wardCode);
+        if (!province || !ward) {
+          toast.add({
+            type: "error",
+            description: "Vui lòng chọn tỉnh/thành và phường/xã hợp lệ.",
+            priority: "high",
+          });
+          return;
+        }
+
+        const address = await createAddress({
+          recipientName: data.fullName.trim(),
+          recipientPhone: `+84${toLocalDigits(data.phone)}`,
+          provinceCode: province.code,
+          provinceName: province.name,
+          wardCode: ward.code,
+          wardName: ward.name,
+          addressDetail: data.addressDetail.trim(),
+          isDefault: addresses.length === 0,
+        });
+        if (!address.id) {
+          throw new Error("Không nhận được mã địa chỉ vừa lưu. Vui lòng thử lại.");
+        }
+        addressId = address.id;
+        setSelectedAddressId(address.id);
+      }
+
+      setSubmitPhase("creating-order");
       const order = await createOrder({
-        addressId: selectedAddressId,
-        deliveryDate,
+        addressId,
         note: data.note?.trim() || undefined,
         paymentMethod,
         items: buildOrderItems(),
@@ -279,6 +275,8 @@ export default function CheckoutPage() {
       router.push(`/checkout/success?ref=${order.orderNumber}`);
     } catch (err) {
       console.error(err);
+    } finally {
+      setSubmitPhase(null);
     }
   };
 
@@ -420,11 +418,20 @@ export default function CheckoutPage() {
               addresses={addresses}
               selectedId={selectedAddressId}
               onSelect={applyAddress}
+              onDeleted={(address) => {
+                if (selectedAddressId !== address.id) return;
+                setSelectedAddressId(null);
+                setValue("fullName", "", { shouldValidate: false });
+                setValue("phone", "", { shouldValidate: false });
+                setValue("provinceCode", undefined, { shouldValidate: false });
+                setValue("wardCode", undefined, { shouldValidate: false });
+                setValue("addressDetail", "", { shouldValidate: false });
+              }}
             />
 
             <div className="rounded-lg border p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Thông tin giao hàng</h2>
+                <h2 className="text-lg font-semibold">Thông tin người nhận</h2>
                 {savedInfo && addresses.length === 0 ? (
                   <button
                     type="button"
@@ -436,27 +443,9 @@ export default function CheckoutPage() {
                 ) : null}
               </div>
 
-              {selectedAddressId ? (
-                <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                  Phí giao hàng được tính theo địa chỉ đã chọn. Muốn đổi thông
-                  tin, hãy sửa địa chỉ trong danh sách phía trên.
-                </p>
-              ) : null}
-
-              <div className="space-y-1.5">
-                <Label htmlFor="deliveryDate">Ngày dự kiến giao hàng</Label>
-                <Input
-                  id="deliveryDate"
-                  type="date"
-                  min={todayDate || undefined}
-                  value={deliveryDate}
-                  onChange={(event) => setDeliveryDate(event.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Phí ship sẽ được tính lại theo địa chỉ và ngày giao hàng.
-                </p>
-              </div>
+              <p className="rounded-md border border-secondary/25 bg-secondary/10 px-3 py-2 text-sm font-normal text-foreground">
+                Shop sẽ liên hệ bạn sau khi đặt hàng để xác nhận phí vận chuyển.
+              </p>
 
               <div className="space-y-1.5">
                 <Label htmlFor="fullName">
@@ -464,8 +453,9 @@ export default function CheckoutPage() {
                 </Label>
                 <Input
                   id="fullName"
-                  {...register("fullName")}
-                  readOnly={Boolean(selectedAddressId)}
+                  {...register("fullName", {
+                    onChange: () => setSelectedAddressId(null),
+                  })}
                   placeholder="Nhập họ và tên"
                 />
                 {errors.fullName ? (
@@ -491,8 +481,8 @@ export default function CheckoutPage() {
                         id="phone"
                         inputMode="numeric"
                         value={field.value}
-                        readOnly={Boolean(selectedAddressId)}
                         onChange={(e) => {
+                          setSelectedAddressId(null);
                           const digitsOnly = e.target.value
                             .replace(/\D/g, "")
                             .replace(/^0+/, "");
@@ -522,11 +512,11 @@ export default function CheckoutPage() {
                     render={({ field }) => (
                       <Select
                         value={field.value ? String(field.value) : ""}
-                        disabled={Boolean(selectedAddressId)}
                         onValueChange={(value) => {
                           if (!value) return;
+                          setSelectedAddressId(null);
                           field.onChange(Number(value));
-                          setValue("wardCode", undefined);
+                          resetField("wardCode");
                         }}
                       >
                         <SelectTrigger className="w-full">
@@ -576,9 +566,10 @@ export default function CheckoutPage() {
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(value) => {
                           if (!value) return;
+                          setSelectedAddressId(null);
                           field.onChange(Number(value));
                         }}
-                        disabled={Boolean(selectedAddressId) || !provinceCode}
+                        disabled={!provinceCode}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue>
@@ -590,7 +581,10 @@ export default function CheckoutPage() {
                               }
                               return (
                                 wards?.find((w) => String(w.code) === value)
-                                  ?.name ?? value
+                                  ?.name ??
+                                (isLoadingWards
+                                  ? "Đang tải..."
+                                  : "Chọn phường/xã")
                               );
                             }}
                           </SelectValue>
@@ -622,8 +616,9 @@ export default function CheckoutPage() {
                 </Label>
                 <Input
                   id="addressDetail"
-                  {...register("addressDetail")}
-                  readOnly={Boolean(selectedAddressId)}
+                  {...register("addressDetail", {
+                    onChange: () => setSelectedAddressId(null),
+                  })}
                   placeholder="Số nhà, tên đường..."
                 />
                 {errors.addressDetail ? (
@@ -692,15 +687,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {paymentMethod === "BANK_TRANSFER" && !shippingQuote ? (
-                <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
-                  Mã QR sẽ hiển thị sau khi chọn địa chỉ và tính xong phí vận chuyển.
-                </p>
-              ) : null}
-
-              {paymentMethod === "BANK_TRANSFER" &&
-              shippingQuote &&
-              !isShippingError ? (
+              {paymentMethod === "BANK_TRANSFER" ? (
                 <div className="flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-4">
                   <div className="relative size-72 overflow-hidden rounded-xl border bg-white">
                     <Image
@@ -927,13 +914,7 @@ export default function CheckoutPage() {
               ) : null}
             </div>
 
-            <div className="h-px bg-border" />
-
             <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Tạm tính</span>
-                <span className="font-medium">{formatVND(paymentSubtotal)}</span>
-              </div>
               {appliedVoucher ? (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Giảm giá</span>
@@ -941,35 +922,6 @@ export default function CheckoutPage() {
                     -{formatVND(discountAmount)}
                   </span>
                 </div>
-              ) : null}
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Phí vận chuyển</span>
-                <span className="font-medium">
-                  {isCalculatingShipping
-                    ? "Đang tính phí…"
-                    : shippingQuote
-                      ? shippingQuote.isFreeShip
-                        ? "Miễn phí"
-                        : formatVND(shippingQuote.fee)
-                      : selectedAddressId
-                        ? "Chưa tính được"
-                        : "Chọn địa chỉ"}
-                </span>
-              </div>
-              {shippingQuote ? (
-                <p className="text-xs text-muted-foreground">
-                  {shippingQuote.zoneName}
-                  {shippingQuote.amountToFreeShip !== null
-                    ? ` · Mua thêm ${formatVND(shippingQuote.amountToFreeShip)} để được miễn phí ship`
-                    : ""}
-                </p>
-              ) : null}
-              {isShippingError ? (
-                <p className="text-xs text-destructive">
-                  {shippingError instanceof Error
-                    ? shippingError.message
-                    : "Không thể tính phí vận chuyển. Hãy kiểm tra địa chỉ."}
-                </p>
               ) : null}
             </div>
 
@@ -983,23 +935,19 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-2">
-              {isSubmitting ? (
-                <Skeleton className="h-12 w-full" />
-              ) : (
-                <Button
-                  type="submit"
-                  size="xl"
-                  className="w-full"
-                  disabled={
-                    !selectedAddressId ||
-                    !shippingQuote ||
-                    isCalculatingShipping ||
-                    isShippingError
-                  }
-                >
-                  Đặt hàng
-                </Button>
-              )}
+              <Button
+                type="submit"
+                size="xl"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && <Spinner className="size-4" />}
+                {submitPhase === "saving-address"
+                  ? "Đang lưu địa chỉ..."
+                  : submitPhase === "creating-order"
+                    ? "Đang tạo đơn..."
+                    : "Đặt hàng"}
+              </Button>
 
               <Link href="/cart" className="block">
                 <Button

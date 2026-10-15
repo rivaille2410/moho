@@ -87,7 +87,6 @@ export type CreateOrderItemInput = {
 
 export type CreateOrderInput = {
   addressId: string;
-  deliveryDate: string;
   note?: string;
   voucherCode?: string;
   paymentMethod?: PaymentMethod;
