@@ -57,6 +57,7 @@ export type ProductsResponse = {
 export type CursorPaginationMeta = {
   nextCursor: string | null;
   hasNextPage: boolean;
+  totalItems: number;
 };
 
 export type CursorProductsResponse = {
