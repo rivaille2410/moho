@@ -54,6 +54,7 @@ export default function BestSellerList({
         title={title}
         products={products}
         isLoading={isLoading}
+        skeletonCount={12}
         hasMore={hasNextPage}
         seeMoreHref={seeMoreHref}
         onLoadMore={() => fetchNextPage()}
