@@ -1,4 +1,4 @@
-import type { ProductsResponse } from "@/types/product";
+import type { CursorProductsResponse } from "@/types/product";
 import type { PostsResponse } from "@/types/post";
 import {
   getPublicBestSellersPage,
@@ -28,19 +28,18 @@ const HomePage = async () => {
   const categoryEntries = await Promise.all(
     visibleCategories.map(async (category) =>
       getPublicProductsPage({
-        page: 1,
         limit: 12,
         categoryId: category.id,
       })
         .then((page) => [category.id, page] as const)
         .catch(
-          (): readonly [string, ProductsResponse | null] => [category.id, null],
+          (): readonly [string, CursorProductsResponse | null] => [category.id, null],
         ),
     ),
   );
   const categoryProducts = Object.fromEntries(
     categoryEntries.filter(
-      (entry): entry is readonly [string, ProductsResponse] => !!entry[1],
+      (entry): entry is readonly [string, CursorProductsResponse] => !!entry[1],
     ),
   );
 

@@ -54,6 +54,16 @@ export type ProductsResponse = {
   meta: PaginationMeta;
 };
 
+export type CursorPaginationMeta = {
+  nextCursor: string | null;
+  hasNextPage: boolean;
+};
+
+export type CursorProductsResponse = {
+  data: ProductListItem[];
+  meta: CursorPaginationMeta;
+};
+
 export type PublicProductSortBy =
   | "newest"
   | "price_asc"

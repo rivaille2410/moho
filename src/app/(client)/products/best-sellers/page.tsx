@@ -5,7 +5,7 @@ import {
   ProductListingSkeleton,
 } from "../_components/product-listing";
 import { getPublicBestSellersPage } from "@/features/products/api/get-public-page-data";
-import type { ProductsResponse } from "@/types/product";
+import type { CursorProductsResponse } from "@/types/product";
 
 export default async function BestSellersPage({
   searchParams,
@@ -20,11 +20,10 @@ export default async function BestSellersPage({
       : typeof query.categoryId === "string"
         ? query.categoryId
         : undefined;
-  let initialPage: ProductsResponse | undefined;
+  let initialPage: CursorProductsResponse | undefined;
 
   try {
     initialPage = await getPublicBestSellersPage({
-      page: 1,
       limit: 16,
       search,
       categoryId,
