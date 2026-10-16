@@ -20,7 +20,8 @@ export const usePublicProduct = (
       ),
     enabled: !!slug,
     initialData: initialData ?? undefined,
-    staleTime: 60_000,
+    // Show cached list data immediately on navigation, then refresh the detail.
+    staleTime: 0,
     retry: shouldRetryPublicQuery,
     retryDelay: publicQueryRetryDelay,
   });
