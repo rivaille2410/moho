@@ -5,6 +5,7 @@ import { Footer } from "./_components/footer";
 import { NavMenu } from "./_components/nav-menu";
 import { MarqueeBar } from "./_components/marquee-bar";
 import { PromotionPopup } from "./_components/promotion-popup";
+import { ScrollToTop } from "./_components/scroll-to-top";
 
 const ClientLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -17,6 +18,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
       {children}
       <Footer />
       <PromotionPopup />
+      <ScrollToTop />
     </div>
   );
 };

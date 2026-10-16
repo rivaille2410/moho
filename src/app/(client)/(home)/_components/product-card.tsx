@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ImageOff } from "lucide-react";
 
@@ -29,6 +30,7 @@ function getVariantColors(product: ProductListItem) {
 }
 
 export function ProductCard({ product }: { product: ProductListItem }) {
+  const queryClient = useQueryClient();
   const thumbnailUrl = getThumbnailUrl(product);
   const discountPercent = getDiscountPercent(product);
   const colors = getVariantColors(product);
@@ -40,7 +42,19 @@ export function ProductCard({ product }: { product: ProductListItem }) {
     : undefined;
 
   return (
-    <Link href={`/products/${product.slug}`} className="group flex flex-col">
+    <Link
+      href={`/products/${product.slug}`}
+      className="group flex flex-col"
+      onMouseEnter={() =>
+        queryClient.setQueryData(["public-products", product.slug], product)
+      }
+      onFocus={() =>
+        queryClient.setQueryData(["public-products", product.slug], product)
+      }
+      onClick={() =>
+        queryClient.setQueryData(["public-products", product.slug], product)
+      }
+    >
       <div className="relative mb-3 aspect-square overflow-hidden rounded-md bg-muted">
         {discountPercent !== null && (
           <Badge className="absolute left-2 top-2 z-10 rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs font-bold text-background">
