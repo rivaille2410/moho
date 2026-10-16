@@ -43,6 +43,8 @@ type RefreshResult =
   | { kind: "invalid" }
   | { kind: "unavailable" };
 
+const refreshRequests = new Map<string, Promise<RefreshResult>>();
+
 async function refreshTokens(refreshToken: string): Promise<RefreshResult> {
   let res: Response;
   try {
@@ -71,6 +73,17 @@ async function refreshTokens(refreshToken: string): Promise<RefreshResult> {
     kind: "success",
     tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
   };
+}
+
+function refreshTokensOnce(refreshToken: string): Promise<RefreshResult> {
+  const existingRequest = refreshRequests.get(refreshToken);
+  if (existingRequest) return existingRequest;
+
+  const request = refreshTokens(refreshToken).finally(() => {
+    refreshRequests.delete(refreshToken);
+  });
+  refreshRequests.set(refreshToken, request);
+  return request;
 }
 
 function serviceUnavailableResponse() {
@@ -115,13 +128,13 @@ export async function fetchWithAuth(path: string, init: RequestInit = {}) {
     return { res: null, unauthorized: true as const };
   }
 
-  const refreshResult = await refreshTokens(refreshToken);
+  const refreshResult = await refreshTokensOnce(refreshToken);
   if (refreshResult.kind === "unavailable") {
     return { res: serviceUnavailableResponse(), unauthorized: false as const };
   }
   if (refreshResult.kind === "invalid") {
-    cookieStore.delete("accessToken");
-    cookieStore.delete("refreshToken");
+    // A parallel request may already have rotated this token and returned new
+    // cookies. Do not let this stale response delete those newer cookies.
     return { res: null, unauthorized: true as const };
   }
 
@@ -164,13 +177,13 @@ export async function fetchOptionalAuth(path: string, init: RequestInit = {}) {
     return callBackend();
   }
 
-  const refreshResult = await refreshTokens(refreshToken);
+  const refreshResult = await refreshTokensOnce(refreshToken);
   if (refreshResult.kind === "unavailable") {
     return serviceUnavailableResponse();
   }
   if (refreshResult.kind === "invalid") {
-    cookieStore.delete("accessToken");
-    cookieStore.delete("refreshToken");
+    // Keep concurrent successful refresh responses from being overwritten by
+    // a stale request's cookie deletion. Explicit logout clears both cookies.
     return callBackend();
   }
 
