@@ -10,19 +10,22 @@ import {
 } from "@/lib/query-client";
 
 import {
-  ProductsResponse,
+  CursorProductsResponse,
   PublicColorOption,
   QueryProductsParams,
 } from "@/types/product";
 
 export type QueryPublicProductsParams = Omit<QueryProductsParams, "status">;
+type CursorPublicProductsParams = Omit<QueryPublicProductsParams, "page"> & {
+  cursor?: string;
+};
 
 function buildProductsSearchParams(
-  params: QueryPublicProductsParams,
+  params: CursorPublicProductsParams,
 ): URLSearchParams {
   const searchParams = new URLSearchParams();
 
-  if (params.page) searchParams.set("page", String(params.page));
+  if (params.cursor) searchParams.set("cursor", params.cursor);
   if (params.limit) searchParams.set("limit", String(params.limit));
   if (params.search) searchParams.set("search", params.search);
   if (params.categoryId) searchParams.set("categoryId", params.categoryId);
@@ -47,22 +50,22 @@ function buildProductsSearchParams(
 }
 
 async function fetchPublicProducts(
-  params: QueryPublicProductsParams,
+  params: CursorPublicProductsParams,
   signal?: AbortSignal,
-): Promise<ProductsResponse> {
+): Promise<CursorProductsResponse> {
   const query = buildProductsSearchParams(params).toString();
-  return apiClient.get<ProductsResponse>(
+  return apiClient.get<CursorProductsResponse>(
     `/api/public/products${query ? `?${query}` : ""}`,
     { signal },
   );
 }
 
 async function fetchPublicBestSellers(
-  params: QueryPublicProductsParams,
+  params: CursorPublicProductsParams,
   signal?: AbortSignal,
-): Promise<ProductsResponse> {
+): Promise<CursorProductsResponse> {
   const query = buildProductsSearchParams(params).toString();
-  return apiClient.get<ProductsResponse>(
+  return apiClient.get<CursorProductsResponse>(
     `/api/public/products/best-sellers${query ? `?${query}` : ""}`,
     { signal },
   );
@@ -84,18 +87,18 @@ async function fetchPublicColors(
 
 export const usePublicProductsInfinite = (
   params: Omit<QueryPublicProductsParams, "page"> = { limit: 12 },
-  initialPage?: ProductsResponse,
+  initialPage?: CursorProductsResponse,
   options?: { enabled?: boolean },
 ) => {
   return useInfiniteQuery({
     queryKey: ["public-products-infinite", params],
     queryFn: ({ pageParam, signal }) =>
-      fetchPublicProducts({ ...params, page: pageParam }, signal),
+      fetchPublicProducts({ ...params, cursor: pageParam }, signal),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
-    initialPageParam: 1,
+      lastPage.meta.hasNextPage ? lastPage.meta.nextCursor ?? undefined : undefined,
+    initialPageParam: undefined as string | undefined,
     initialData: initialPage
-      ? { pages: [initialPage], pageParams: [1] }
+      ? { pages: [initialPage], pageParams: [undefined] }
       : undefined,
     staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
@@ -107,17 +110,17 @@ export const usePublicProductsInfinite = (
 
 export const usePublicBestSellersInfinite = (
   params: Omit<QueryPublicProductsParams, "page"> = { limit: 12 },
-  initialPage?: ProductsResponse,
+  initialPage?: CursorProductsResponse,
 ) => {
   return useInfiniteQuery({
     queryKey: ["public-best-sellers-infinite", params],
     queryFn: ({ pageParam, signal }) =>
-      fetchPublicBestSellers({ ...params, page: pageParam }, signal),
+      fetchPublicBestSellers({ ...params, cursor: pageParam }, signal),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
-    initialPageParam: 1,
+      lastPage.meta.hasNextPage ? lastPage.meta.nextCursor ?? undefined : undefined,
+    initialPageParam: undefined as string | undefined,
     initialData: initialPage
-      ? { pages: [initialPage], pageParams: [1] }
+      ? { pages: [initialPage], pageParams: [undefined] }
       : undefined,
     staleTime: 60 * 1000,
     placeholderData: keepPreviousData,

@@ -1,5 +1,5 @@
 import type {
-  ProductsResponse,
+  CursorProductsResponse,
   PublicCategory,
   QueryProductsParams,
 } from "@/types/product";
@@ -16,10 +16,9 @@ function queryString(
 }
 
 export function getPublicProductsPage(
-  params: QueryProductsParams,
-): Promise<ProductsResponse> {
+  params: Omit<QueryProductsParams, "page">,
+): Promise<CursorProductsResponse> {
   const query = queryString({
-    page: params.page ?? 1,
     limit: params.limit ?? 16,
     search: params.search,
     categoryId: params.categoryId,
@@ -37,14 +36,12 @@ export function getPublicProductsPage(
 }
 
 export function getPublicBestSellersPage(params: {
-  page?: number;
   limit?: number;
   search?: string;
   categoryId?: string;
-}): Promise<ProductsResponse> {
+}): Promise<CursorProductsResponse> {
   const query = queryString({
     ...params,
-    page: params.page ?? 1,
     limit: params.limit ?? 16,
   });
   return fetchPublicApi(`/public/products/best-sellers?${query}`, {

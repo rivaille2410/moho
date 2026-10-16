@@ -1,7 +1,7 @@
 "use client";
 
 import { ProductGrid } from "./product-grid";
-import type { ProductsResponse } from "@/types/product";
+import type { CursorProductsResponse } from "@/types/product";
 import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
 
 import {
@@ -13,7 +13,7 @@ interface BestSellerListProps {
   title?: string;
   seeMoreHref?: string;
   params?: Omit<QueryPublicProductsParams, "page">;
-  initialPage?: ProductsResponse;
+  initialPage?: CursorProductsResponse;
 }
 
 export default function BestSellerList({

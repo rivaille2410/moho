@@ -6,7 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { PublicProductSortBy } from "@/types/product";
-import type { ProductsResponse } from "@/types/product";
+import type { CursorProductsResponse } from "@/types/product";
 
 import {
   Select,
@@ -190,7 +190,7 @@ type ProductListingProps = {
   source: ProductListingSource;
   title: string;
   breadcrumbLabel?: string;
-  initialPage?: ProductsResponse;
+  initialPage?: CursorProductsResponse;
 };
 
 export function ProductListing({

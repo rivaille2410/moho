@@ -4,7 +4,7 @@ import { ProductGrid } from "./product-grid";
 
 import { usePublicCategories } from "@/features/categories/hooks/use-public-categories";
 import { usePublicProductsInfinite } from "@/features/products/hooks/use-public-products";
-import type { ProductsResponse, PublicCategory } from "@/types/product";
+import type { CursorProductsResponse, PublicCategory } from "@/types/product";
 import { PublicApiErrorState } from "@/components/shared/public-api-error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,7 +13,7 @@ const PRODUCTS_PER_CATEGORY = 12;
 interface CategoryProductListProps {
   categoryId: string;
   title: string;
-  initialPage?: ProductsResponse;
+  initialPage?: CursorProductsResponse;
 }
 
 function CategoryProductList({
@@ -62,7 +62,7 @@ function CategoryProductList({
 interface CategoryProductListsProps {
   maxCategories?: number;
   initialCategories?: PublicCategory[];
-  initialProducts?: Record<string, ProductsResponse>;
+  initialProducts?: Record<string, CursorProductsResponse>;
 }
 
 export default function CategoryProductLists({
