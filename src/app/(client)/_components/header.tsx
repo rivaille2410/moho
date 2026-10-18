@@ -137,7 +137,7 @@ export const Header = () => {
                   key="desktop-trigger"
                   className="hidden md:flex h-fit py-1 px-2 gap-2"
                 >
-                  <UserRound className="size-6" />
+                  <UserRound className="size-5" />
                   <div className="text-start">
                     <p>Đăng nhập / Đăng ký</p>
                     <p className="flex items-center gap-1 font-normal">
@@ -146,12 +146,12 @@ export const Header = () => {
                   </div>
                 </Button>,
                 <Button
-                  size={"icon-xl"}
+                  size={"icon"}
                   variant={"ghost"}
                   key="mobile-trigger"
                   className="flex md:hidden"
                 >
-                  <UserRound className="size-6" />
+                  <UserRound className="size-5" />
                 </Button>,
               ]}
             </AuthModal>
