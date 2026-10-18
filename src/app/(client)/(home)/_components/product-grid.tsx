@@ -133,14 +133,27 @@ export function ProductGrid({
 
               <div className="absolute inset-x-0 bottom-1 flex justify-center">
                 {seeMoreHref ? (
-                  <Link href={seeMoreHref} className={moreButtonClassName}>
+                  <Link
+                    href={seeMoreHref}
+                    className={moreButtonClassName}
+                    onClick={(event) => {
+                      if (hasMore && onLoadMore) {
+                        event.preventDefault();
+                        setExpanded(true);
+                        onLoadMore();
+                      }
+                    }}
+                  >
                     Xem thêm
                     <ChevronDown className="size-3.5" />
                   </Link>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setExpanded(true)}
+                    onClick={() => {
+                      setExpanded(true);
+                      if (hasMore) onLoadMore?.();
+                    }}
                     className={moreButtonClassName}
                   >
                     Xem thêm

@@ -21,7 +21,16 @@ function CategoryProductList({
   title,
   initialPage,
 }: CategoryProductListProps) {
-  const { data, isLoading, isLoadingError, isFetching, refetch } = usePublicProductsInfinite(
+  const {
+    data,
+    isLoading,
+    isLoadingError,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = usePublicProductsInfinite(
     {
       categoryId,
       limit: PRODUCTS_PER_CATEGORY,
@@ -51,9 +60,11 @@ function CategoryProductList({
         title={title}
         products={products}
         isLoading={isLoading}
-        hasMore={data?.pages.at(-1)?.meta.hasNextPage}
+        hasMore={hasNextPage}
         skeletonCount={PRODUCTS_PER_CATEGORY}
         seeMoreHref={`/products?categoryId=${categoryId}`}
+        onLoadMore={() => fetchNextPage()}
+        isLoadingMore={isFetchingNextPage}
       />
     </div>
   );
